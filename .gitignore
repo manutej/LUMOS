@@ -1,0 +1,41 @@
+# Binaries
+/lumos
+*.o
+*.a
+*.so
+
+# Build outputs
+dist/
+build/
+*.exe
+*.dll
+*.dylib
+
+# Dependencies
+vendor/
+go.sum
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Test outputs
+*.test
+coverage.out
+*.coverprofile
+
+# Local config
+settings.local.json
+config.local.yaml
+
+# PDF test files (if large)
+test_pdfs/large_*.pdf
+
+# Temporary files
+tmp/
+temp/
+*.tmp
