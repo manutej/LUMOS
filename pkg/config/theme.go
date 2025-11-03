@@ -73,72 +73,72 @@ func NewStyles(theme Theme) Styles {
 	return Styles{
 		Theme: theme,
 		Background: lipgloss.NewStyle().
-			Background(theme.Background).
-			Foreground(theme.Text),
+			Background(lipgloss.Color(theme.Background)).
+			Foreground(lipgloss.Color(theme.Text)),
 
 		Text: lipgloss.NewStyle().
-			Foreground(theme.Text).
-			Background(theme.Background),
+			Foreground(lipgloss.Color(theme.Text)).
+			Background(lipgloss.Color(theme.Background)),
 
 		Accent: lipgloss.NewStyle().
-			Foreground(theme.Accent).
-			Background(theme.Background).
+			Foreground(lipgloss.Color(theme.Accent)).
+			Background(lipgloss.Color(theme.Background)).
 			Bold(true),
 
 		Muted: lipgloss.NewStyle().
-			Foreground(theme.Muted).
-			Background(theme.Background),
+			Foreground(lipgloss.Color(theme.Muted)).
+			Background(lipgloss.Color(theme.Background)),
 
 		Warning: lipgloss.NewStyle().
-			Foreground(theme.Warning).
-			Background(theme.Background),
+			Foreground(lipgloss.Color(theme.Warning)).
+			Background(lipgloss.Color(theme.Background)),
 
 		Success: lipgloss.NewStyle().
-			Foreground(theme.Success).
-			Background(theme.Background),
+			Foreground(lipgloss.Color(theme.Success)).
+			Background(lipgloss.Color(theme.Background)),
 
 		Error: lipgloss.NewStyle().
-			Foreground(theme.Error).
-			Background(theme.Background),
+			Foreground(lipgloss.Color(theme.Error)).
+			Background(lipgloss.Color(theme.Background)),
 
 		PaneBorder: lipgloss.NewStyle().
-			Foreground(theme.Muted).
+			Foreground(lipgloss.Color(theme.Muted)).
 			BorderStyle(lipgloss.NormalBorder()),
 
 		PaneTitle: lipgloss.NewStyle().
-			Foreground(theme.Accent).
-			Background(theme.Background).
+			Foreground(lipgloss.Color(theme.Accent)).
+			Background(lipgloss.Color(theme.Background)).
 			Bold(true).
 			Padding(0, 1),
 
 		SelectedItem: lipgloss.NewStyle().
-			Background(theme.Accent).
-			Foreground(theme.Background).
+			Background(lipgloss.Color(theme.Accent)).
+			Foreground(lipgloss.Color(theme.Background)).
 			Bold(true).
 			Padding(0, 1),
 
 		UnselectedItem: lipgloss.NewStyle().
-			Foreground(theme.Text).
-			Background(theme.Background).
+			Foreground(lipgloss.Color(theme.Text)).
+			Background(lipgloss.Color(theme.Background)).
 			Padding(0, 1),
 
 		SearchMatch: lipgloss.NewStyle().
-			Background(theme.Success).
-			Foreground(theme.Background).
+			Background(lipgloss.Color(theme.Success)).
+			Foreground(lipgloss.Color(theme.Background)).
 			Bold(true),
 
 		LineNumber: lipgloss.NewStyle().
-			Foreground(theme.Muted).
-			Background(theme.Background),
+			Foreground(lipgloss.Color(theme.Muted)).
+			Background(lipgloss.Color(theme.Background)),
 
 		StatusBar: lipgloss.NewStyle().
-			Foreground(theme.Text).
-			Background(theme.Muted).
+			Foreground(lipgloss.Color(theme.Text)).
+			Background(lipgloss.Color(theme.Muted)).
 			Padding(0, 1),
 
 		HelpText: lipgloss.NewStyle().
-			Foreground(theme.Muted).
-			Background(theme.Background).
+			Foreground(lipgloss.Color(theme.Muted)).
+			Background(lipgloss.Color(theme.Background)).
 			Italic(true),
 	}
 }

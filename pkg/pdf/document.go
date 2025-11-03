@@ -57,14 +57,12 @@ func NewDocument(filepath string, maxCachePages int) (*Document, error) {
 	}
 
 	// Extract metadata
-	if opts := r.Trailer(); opts != nil {
-		if info := opts.Info(); info != nil {
-			doc.title = info.Title
-			doc.author = info.Author
-			doc.subject = info.Subject
-			doc.creator = info.Creator
-		}
-	}
+	// Note: Metadata extraction depends on PDF structure
+	// We'll implement basic metadata extraction later
+	doc.title = filepath
+	doc.author = ""
+	doc.subject = ""
+	doc.creator = ""
 
 	return doc, nil
 }
@@ -95,9 +93,16 @@ func (d *Document) GetPage(pageNum int) (*PageInfo, error) {
 	}
 	defer f.Close()
 
-	content, err := r.GetPlainText(pageNum)
-	if err != nil {
-		return nil, fmt.Errorf("failed to extract page %d: %w", pageNum, err)
+	page := r.Page(pageNum)
+	if page.V.IsNull() {
+		return nil, fmt.Errorf("page %d is empty or null", pageNum)
+	}
+
+	// Extract plain text from page
+	content := ""
+	texts := page.Content().Text
+	for _, text := range texts {
+		content += text.S + " "
 	}
 
 	// Cache the result
@@ -268,9 +273,29 @@ type Match struct {
 
 // findMatches finds all case-insensitive matches of a query in text
 func findMatches(text, query string) []Match {
-	// TODO: Implement proper text search with context
-	// For now, basic implementation
+	if query == "" {
+		return []Match{}
+	}
+
 	var matches []Match
-	// Implementation will be added in search.go
+	lines := TextToLines(text)
+
+	for _, line := range lines {
+		// Case-insensitive search
+		positions := CaseInsensitiveMatch(line.Text, query)
+
+		for _, pos := range positions {
+			before, match, after := ExtractContext(line.Text, pos, len(query), 30)
+
+			matches = append(matches, Match{
+				Text:          match,
+				LineNum:       line.LineNum,
+				ColumnNum:     pos + 1, // 1-indexed
+				ContextBefore: before,
+				ContextAfter:  after,
+			})
+		}
+	}
+
 	return matches
 }

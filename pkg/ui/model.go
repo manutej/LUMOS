@@ -1,6 +1,8 @@
 package ui
 
 import (
+	"fmt"
+
 	"github.com/charmbracelet/bubbles/viewport"
 	"github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -42,15 +44,20 @@ func NewModel(document *pdf.Document) *Model {
 	theme := config.DarkTheme
 	styles := config.NewStyles(theme)
 
+	// Initialize viewport
+	vp := viewport.New(80, 20)
+	vp.Style = styles.Background
+
 	m := &Model{
-		document:   document,
-		cache:      cache,
-		currentPage: 1,
-		theme:      theme,
-		styles:     styles,
-		keyHandler: NewKeyHandler(),
-		showHelp:   false,
+		document:      document,
+		cache:         cache,
+		currentPage:   1,
+		theme:         theme,
+		styles:        styles,
+		keyHandler:    NewKeyHandler(),
+		showHelp:      false,
 		activePaneIdx: 1, // Start in viewer pane
+		viewport:      vp,
 	}
 
 	return m
@@ -198,21 +205,21 @@ func (m *Model) handleKeyPress(msg tea.KeyMsg) tea.Cmd {
 			return m.goToPreviousPage()
 		}
 	} else if m.keyHandler.Mode == KeyModeSearch {
-		switch msg.String() {
-		case "escape":
+		switch msg.Type {
+		case tea.KeyEscape, tea.KeyCtrlC:
 			m.keyHandler.Mode = KeyModeNormal
 			m.searchActive = false
 			return nil
-		case "enter":
+		case tea.KeyEnter:
 			// Execute search
 			return m.executeSearch()
-		case "backspace":
+		case tea.KeyBackspace:
 			if len(m.searchQuery) > 0 {
 				m.searchQuery = m.searchQuery[:len(m.searchQuery)-1]
 			}
 			return nil
-		default:
-			m.searchQuery += msg.String()
+		case tea.KeyRunes:
+			m.searchQuery += string(msg.Runes)
 			return nil
 		}
 	}
@@ -304,7 +311,7 @@ func (m *Model) jumpToSearchResult() {
 func (m *Model) renderMetadataPane(width, height int) string {
 	content := "📄 Document\n\n"
 	meta := m.document.GetMetadata()
-	content += "Pages: " + string(rune(m.document.GetPageCount())) + "\n"
+	content += fmt.Sprintf("Pages: %d\n", m.document.GetPageCount())
 	if meta.Title != "" {
 		content += "Title: " + meta.Title + "\n"
 	}
@@ -317,14 +324,14 @@ func (m *Model) renderMetadataPane(width, height int) string {
 }
 
 func (m *Model) renderViewerPane(width, height int) string {
-	title := m.styles.PaneTitle.Render("📖 Viewer - Page " + string(rune(m.currentPage)))
+	title := m.styles.PaneTitle.Render(fmt.Sprintf("📖 Viewer - Page %d", m.currentPage))
 	paneStyle := m.styles.PaneBorder.Width(width).Height(height)
 	return paneStyle.Render(title + "\n" + m.viewport.View())
 }
 
 func (m *Model) renderSearchPane(width, height int) string {
 	title := m.styles.PaneTitle.Render("🔍 Search")
-	content := "Results: " + string(rune(len(m.searchResults))) + "\n"
+	content := fmt.Sprintf("Results: %d\n", len(m.searchResults))
 	if m.searchActive {
 		content += "Query: " + m.searchQuery + "\n"
 	}
@@ -334,7 +341,7 @@ func (m *Model) renderSearchPane(width, height int) string {
 }
 
 func (m *Model) renderStatusBar() string {
-	status := "Page " + string(rune(m.currentPage)) + "/" + string(rune(m.document.GetPageCount()))
+	status := fmt.Sprintf("Page %d/%d", m.currentPage, m.document.GetPageCount())
 	status += " | Theme: " + m.theme.Name
 	status += " | [?] Help [q] Quit"
 

@@ -88,7 +88,13 @@ func (ts *TextSearch) Reset() {
 
 // CaseSensitiveMatch performs case-sensitive text matching
 func CaseSensitiveMatch(text, query string) []int {
-	var matches []int
+	matches := []int{}
+
+	// Handle empty query
+	if query == "" {
+		return matches
+	}
+
 	start := 0
 
 	for {
@@ -110,9 +116,15 @@ func CaseInsensitiveMatch(text, query string) []int {
 
 // WordMatch performs whole-word matching
 func WordMatch(text, query string) []int {
+	matches := []int{}
+
+	// Handle empty query
+	if query == "" {
+		return matches
+	}
+
 	text = strings.ToLower(text)
 	query = strings.ToLower(query)
-	var matches []int
 
 	start := 0
 	for {
@@ -151,6 +163,16 @@ func isWordBoundary(text string, pos int) bool {
 
 // ExtractContext extracts context around a match
 func ExtractContext(text string, matchPos, matchLen, contextChars int) (before, match, after string) {
+	// Validate inputs
+	if matchPos < 0 || matchPos >= len(text) {
+		return "", "", ""
+	}
+
+	// Ensure matchLen doesn't go beyond text bounds
+	if matchPos+matchLen > len(text) {
+		matchLen = len(text) - matchPos
+	}
+
 	start := matchPos - contextChars
 	if start < 0 {
 		start = 0
@@ -199,30 +221,42 @@ type LineInfo struct {
 // TextToLines converts text into line information
 func TextToLines(text string) []LineInfo {
 	var lines []LineInfo
+
+	if text == "" {
+		return lines
+	}
+
 	startPos := 0
 	lineNum := 1
 
-	for _, char := range text {
+	for i, char := range text {
 		if char == '\n' {
-			endPos := startPos + len(text[startPos:strings.Index(text[startPos:], "\n")])
 			lines = append(lines, LineInfo{
 				LineNum:  lineNum,
-				Text:     text[startPos:endPos],
+				Text:     text[startPos:i],
 				StartPos: startPos,
-				EndPos:   endPos,
+				EndPos:   i,
 			})
-			startPos = endPos + 1
+			startPos = i + 1
 			lineNum++
 		}
 	}
 
-	// Add last line
+	// Add last line (if any text after last newline, or if no newlines at all)
 	if startPos < len(text) {
 		lines = append(lines, LineInfo{
 			LineNum:  lineNum,
 			Text:     text[startPos:],
 			StartPos: startPos,
 			EndPos:   len(text),
+		})
+	} else if startPos == len(text) && len(text) > 0 {
+		// Handle trailing newline - creates an empty last line
+		lines = append(lines, LineInfo{
+			LineNum:  lineNum,
+			Text:     "",
+			StartPos: startPos,
+			EndPos:   startPos,
 		})
 	}
 
