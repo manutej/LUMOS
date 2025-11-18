@@ -93,39 +93,16 @@ func (d *Document) GetPageImages(pageNum int, opts ImageExtractionOptions) ([]Pa
 		return cached, nil
 	}
 
-	// TODO: Implement with pdfcpu when library is available
-	// For now, return empty slice (images not extracted yet)
-	// Code structure is ready for integration
-
-	/*
-	// Once pdfcpu is added, this is the implementation pattern:
-
-	f, err := os.Open(d.filepath)
+	// Delegate to implementation (pdfcpu-based when available)
+	images, err := d.extractImagesWithPdfcpu(pageNum, opts)
 	if err != nil {
-		return nil, fmt.Errorf("failed to open PDF: %w", err)
+		// Log error but don't fail - return empty slice as fallback
+		// This keeps the reader functional for text-only PDFs
+		fmt.Printf("Note: Image extraction failed for page %d: %v\n", pageNum, err)
+		images = []PageImage{}
 	}
-	defer f.Close()
-
-	pdfContext, err := pdfcpu.Read(f, pdfcpu.NewDefaultConfiguration())
-	if err != nil {
-		return nil, fmt.Errorf("failed to read PDF with pdfcpu: %w", err)
-	}
-
-	pageDict := pdfContext.PageDict(pageNum)
-	if pageDict == nil {
-		return nil, fmt.Errorf("page %d not found in PDF", pageNum)
-	}
-
-	// Extract images from page using pdfcpu API
-	var images []PageImage
-	// ... extraction logic here ...
 
 	// Cache and return
-	d.imageCache.Put(pageNum, images)
-	return images, nil
-	*/
-
-	images := []PageImage{}
 	d.imageCache.Put(pageNum, images)
 	return images, nil
 }
