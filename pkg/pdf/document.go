@@ -14,6 +14,9 @@ type Document struct {
 	// Caching - uses proper LRUCache implementation (was: unbounded simple map)
 	cache *LRUCache
 
+	// Image caching (Phase 3.1+)
+	imageCache *ImagePageCache
+
 	// Metadata
 	title      string
 	author     string
@@ -52,9 +55,10 @@ func NewDocument(filepath string, maxCachePages int) (*Document, error) {
 	}
 
 	doc := &Document{
-		filepath: filepath,
-		pages:    pages,
-		cache:    NewLRUCache(maxCachePages),
+		filepath:   filepath,
+		pages:      pages,
+		cache:      NewLRUCache(maxCachePages),
+		imageCache: NewImagePageCache(10), // 10-page image cache
 	}
 
 	// Extract metadata

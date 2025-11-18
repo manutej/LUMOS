@@ -64,6 +64,9 @@ type ImageExtractionOptions struct {
 
 	// PreserveDPI if true, respects DPI information in PDF
 	PreserveDPI bool
+
+	// MaxImagesPerPage limits number of images extracted
+	MaxImagesPerPage int
 }
 
 // DefaultImageExtractionOptions returns sensible defaults
@@ -73,20 +76,58 @@ func DefaultImageExtractionOptions() ImageExtractionOptions {
 		MinHeight:        10,  // At least 10 points tall
 		OnlyInlineImages: true,
 		PreserveDPI:      true,
+		MaxImagesPerPage: 100, // Reasonable limit per page
 	}
 }
 
 // GetPageImages extracts images from a specific page
-// Note: Requires pdfcpu library which is optional
-// Returns empty slice if pdfcpu not available
+// Requires pdfcpu library for extraction
+// Returns empty slice if pdfcpu not available or page has no images
 func (d *Document) GetPageImages(pageNum int, opts ImageExtractionOptions) ([]PageImage, error) {
 	if pageNum < 1 || pageNum > d.pages {
 		return nil, fmt.Errorf("page number out of range: %d", pageNum)
 	}
 
+	// Check cache first
+	if cached, exists := d.imageCache.Get(pageNum); exists {
+		return cached, nil
+	}
+
 	// TODO: Implement with pdfcpu when library is available
-	// For now, return empty slice (images not supported yet)
-	return []PageImage{}, nil
+	// For now, return empty slice (images not extracted yet)
+	// Code structure is ready for integration
+
+	/*
+	// Once pdfcpu is added, this is the implementation pattern:
+
+	f, err := os.Open(d.filepath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to open PDF: %w", err)
+	}
+	defer f.Close()
+
+	pdfContext, err := pdfcpu.Read(f, pdfcpu.NewDefaultConfiguration())
+	if err != nil {
+		return nil, fmt.Errorf("failed to read PDF with pdfcpu: %w", err)
+	}
+
+	pageDict := pdfContext.PageDict(pageNum)
+	if pageDict == nil {
+		return nil, fmt.Errorf("page %d not found in PDF", pageNum)
+	}
+
+	// Extract images from page using pdfcpu API
+	var images []PageImage
+	// ... extraction logic here ...
+
+	// Cache and return
+	d.imageCache.Put(pageNum, images)
+	return images, nil
+	*/
+
+	images := []PageImage{}
+	d.imageCache.Put(pageNum, images)
+	return images, nil
 }
 
 // ImageInfo contains metadata about images on a page
@@ -109,4 +150,24 @@ func (d *Document) EstimatePageImageCount(pageNum int) (int, error) {
 	// TODO: Implement basic estimation with pdfcpu
 	// For now, return 0
 	return 0, nil
+}
+
+// HasImageCache returns true if image cache is available
+func (d *Document) HasImageCache() bool {
+	return d.imageCache != nil
+}
+
+// ClearImageCache clears the image cache
+func (d *Document) ClearImageCache() {
+	if d.imageCache != nil {
+		d.imageCache.Clear()
+	}
+}
+
+// ImageCacheStats returns statistics about image caching
+func (d *Document) ImageCacheStats() ImageCacheStats {
+	if d.imageCache == nil {
+		return ImageCacheStats{}
+	}
+	return d.imageCache.Stats()
 }
