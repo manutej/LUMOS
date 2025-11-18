@@ -84,6 +84,8 @@ func (kh *KeyHandler) handleNormalKey(msg tea.KeyMsg) tea.Cmd {
 		return ToggleBookmark
 	case "'", "`":
 		return ToggleBookmarkList
+	case "i":
+		return ToggleImages
 	case "?":
 		return ToggleHelp
 
@@ -238,6 +240,10 @@ var (
 		return ToggleHelpMsg{}
 	}
 
+	ToggleImages = func() tea.Msg {
+		return ToggleImagesMsg{}
+	}
+
 	Exit = func() tea.Msg {
 		return tea.QuitMsg{}
 	}
@@ -287,6 +293,8 @@ type ToggleBookmarkMsg struct{}
 
 type ToggleBookmarkListMsg struct{}
 
+type ToggleImagesMsg struct{}
+
 // VimKeybindingReference provides a reference of all keybindings
 var VimKeybindingReference = map[string]string{
 	// Navigation - Line scrolling
@@ -324,6 +332,9 @@ var VimKeybindingReference = map[string]string{
 	// Bookmarks
 	"m":             "Add/toggle bookmark on current page",
 	"'/backtick":    "Show bookmark list",
+
+	// Images (Phase 3)
+	"i":             "Toggle images on/off",
 
 	// UI Controls
 	"Tab":           "Cycle through panes (forward)",

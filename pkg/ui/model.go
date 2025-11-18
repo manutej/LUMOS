@@ -50,6 +50,13 @@ type Model struct {
 	showBookmarks bool
 	docPath       string // Full path to current document
 
+	// Phase 3: Image Support
+	imageCache     *pdf.ImagePageCache
+	showImages     bool              // Toggle with 'i' key
+	imagesOnPage   []pdf.PageImage   // Current page images
+	imageRenderCfg ImageRenderConfig // Terminal config
+	imageLoading   bool              // Loading state
+
 	// Viewport
 	viewport    viewport.Model
 	metadataView viewport.Model
@@ -84,6 +91,10 @@ func NewModel(document *pdf.Document) *Model {
 	// Initialize bookmark pane
 	bookmarkPane := NewBookmarkPane(80, 10)
 
+	// Initialize image cache and renderer config
+	imageCache := pdf.NewImagePageCache(10)
+	imageRenderCfg := GetImageRenderConfig(80, 20)
+
 	m := &Model{
 		document:             document,
 		cache:                cache,
@@ -106,6 +117,12 @@ func NewModel(document *pdf.Document) *Model {
 		cfg:                  cfg,
 		bookmarkPane:         bookmarkPane,
 		showBookmarks:        false,
+		// Phase 3: Image Support
+		imageCache:     imageCache,
+		showImages:     true, // Enable images by default
+		imagesOnPage:   []pdf.PageImage{},
+		imageRenderCfg: imageRenderCfg,
+		imageLoading:   false,
 	}
 
 	return m
@@ -222,6 +239,12 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		} else {
 			m.bookmarkPane.Hide()
 		}
+
+	case ToggleImagesMsg:
+		// Toggle image display on/off
+		m.showImages = !m.showImages
+		// TODO: Phase 3.5 - Load images when showImages becomes true
+		// For now, just toggle the flag. Rendering will be added in Phase 3.5
 	}
 
 	return m, cmd
