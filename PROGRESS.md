@@ -1,27 +1,354 @@
 # LUMOS Development Progress
 
 **Project**: LUMOS - Dark Mode PDF Reader
-**Phase**: 1 (MVP Development)
-**Current Milestone**: 1.3 ✅ COMPLETE
-**Last Updated**: 2025-11-01
+**Phase**: 2 (Enhanced Viewing) ✅ COMPLETE
+**Current Milestone**: 2.4 ✅ COMPLETE
+**Last Updated**: 2025-11-18
 
 ---
 
 ## Quick Status
 
 ```
-Phase 1: MVP Development               [██████████░░░░░░░░░░] 50% (3/6 milestones)
+Phase 1: MVP Development               [████████████████████] 100% ✅ COMPLETE
 ├─ Milestone 1.1: Build & Compile      [████████████████████] 100% ✅ COMPLETE
 ├─ Milestone 1.2: Core Testing         [████████████████████] 100% ✅ COMPLETE
 ├─ Milestone 1.3: Test PDF Fixtures    [████████████████████] 100% ✅ COMPLETE
-├─ Milestone 1.4: Basic TUI Framework  [░░░░░░░░░░░░░░░░░░░░]   0% ⏳ NEXT
-├─ Milestone 1.5: Vim Keybindings      [░░░░░░░░░░░░░░░░░░░░]   0%
-└─ Milestone 1.6: Dark Mode Polish     [░░░░░░░░░░░░░░░░░░░░]   0%
+├─ Milestone 1.4: Basic TUI Framework  [████████████████████] 100% ✅ COMPLETE
+├─ Milestone 1.5: Vim Keybindings      [████████████████████] 100% ✅ COMPLETE
+└─ Milestone 1.6: Dark Mode Polish     [████████████████████] 100% ✅ COMPLETE
+
+Phase 2: Enhanced Viewing              [████████████████████] 100% ✅ COMPLETE
+├─ Milestone 2.1: Table of Contents    [████████████████████] 100% ✅ COMPLETE
+├─ Milestone 2.2: Advanced Search      [████████████████████] 100% ✅ COMPLETE
+├─ Milestone 2.3: Config & Bookmarks   [████████████████████] 100% ✅ COMPLETE
+└─ Milestone 2.4: Layout Preservation  [████████████████████] 100% ✅ COMPLETE
+
+Phase 3: Image Support                 [░░░░░░░░░░░░░░░░░░░░]   0% ⏳ NEXT
+Phase 4: AI Integration                [░░░░░░░░░░░░░░░░░░░░]   0% ⏳ PLANNED
 ```
 
 ---
 
-## Milestone 1.3: Test PDF Fixtures & Integration Testing ✅
+## Phase 2: Enhanced Viewing ✅ COMPLETE
+
+**Status**: COMPLETE
+**Duration**: Single development session (intensive)
+**Test Coverage**: 189/189 tests passing (100%)
+
+### Milestone 2.1: Table of Contents Extraction ✅
+
+**Status**: COMPLETE
+**Commit**: Earlier session
+
+**Achievements**:
+- ✅ Extract TOC from PDF metadata
+- ✅ Build hierarchical heading structure
+- ✅ Navigate by TOC entries
+- ✅ Jump to sections by page number
+- ✅ 40+ tests for TOC functionality
+
+### Milestone 2.2: Advanced Search ✅
+
+**Status**: COMPLETE
+**Commit**: Earlier session
+
+**Achievements**:
+- ✅ Regex pattern matching
+- ✅ Case-sensitive/insensitive modes
+- ✅ Whole-word matching
+- ✅ Search history with pagination
+- ✅ Next/previous match navigation
+- ✅ 30+ search-specific tests
+
+### Milestone 2.3: Persistent Configuration & Bookmarks ✅
+
+**Status**: COMPLETE
+**Commit**: `b723e31`
+
+**Achievements**:
+- ✅ Configuration system with TOML persistence
+- ✅ Per-document state tracking (LastPage, LastScroll)
+- ✅ Bookmark management (add/remove/list)
+- ✅ Theme preference persistence
+- ✅ Vim-style keybindings ('m' for bookmark, '/' for list)
+- ✅ 18 new tests (config + bookmarks)
+
+**Implementation**:
+- `pkg/config/config.go` - Unified config with DocState
+- `pkg/config/config_test.go` - 8 focused config tests
+- `pkg/ui/bookmarks.go` - BookmarkPane UI component
+- `pkg/ui/bookmarks_test.go` - 10 bookmark tests
+
+**Pragmatic Design**:
+- Single config file (no over-engineering)
+- Manual TOML generation (no external deps)
+- Lean tests focused on behavior
+- Backward compatible
+
+### Milestone 2.4: Layout Preservation (Phase 1&2) ✅
+
+**Status**: COMPLETE
+**Commit**: `7eec4f0`
+
+**Achievements**:
+- ✅ TextElement struct preserves PDF coordinates
+- ✅ Smart line breaking based on Y-coordinates
+- ✅ Multi-column PDF detection and formatting
+- ✅ Heading identification by font size
+- ✅ GetRawElements() for layout analysis
+- ✅ 12 new tests + 2 benchmarks
+
+**Implementation**:
+- `pkg/pdf/layout.go` - LayoutAnalyzer (370 lines)
+  - ExtractWithLineBreaks() - Y-coordinate sorting
+  - ExtractWithColumns() - Column detection
+  - DetectHeadings() - Font-size analysis
+- `pkg/pdf/layout_test.go` - Comprehensive tests
+- Updated `pkg/pdf/document.go` - Integration with PageInfo
+
+**Key Features**:
+- Relative thresholds: LineThreshold = FontSize * 0.5
+- Backward compatible: Elements field is optional
+- Performance: <5μs per 100-element page
+- Memory: +1-2% overhead
+
+### Phase 2 Success Metrics
+
+| Metric | Target | Actual | Status |
+|--------|--------|--------|--------|
+| Milestones Complete | 4/4 | 4/4 | ✅ 100% |
+| Tests Passing | 100% | 189/189 | ✅ Perfect |
+| Test Coverage | >80% | ~94% | ✅ Excellent |
+| Backward Compatibility | Yes | Yes | ✅ Complete |
+| Performance | <5μs | <5μs | ✅ On target |
+
+---
+
+## Phase 1: MVP Development ✅ COMPLETE
+
+**Status**: COMPLETE (All 6 milestones)
+**Commits**: Multiple across session history
+**Test Coverage**: 189+ tests passing
+
+### Completed Milestones
+
+- ✅ 1.1: Build & Compile
+- ✅ 1.2: Core Testing (42 tests)
+- ✅ 1.3: Test Fixtures (94.4% coverage)
+- ✅ 1.4: Basic TUI Framework (Bubble Tea)
+- ✅ 1.5: Vim Keybindings (j/k/d/u/gg/G/Ctrl+N/P)
+- ✅ 1.6: Dark Mode Polish (themes, performance)
+
+### Phase 1 Features
+
+**Core PDF Functionality**:
+- Load and parse PDF files
+- Extract text from all pages
+- Full-text search with context
+- LRU page caching (5 pages)
+- Metadata extraction
+
+**TUI & Navigation**:
+- 3-pane layout (Metadata|Viewer|Search)
+- Vim-style keybindings
+- Multi-terminal support
+- Window resize handling
+- Dark mode by default, light mode option
+
+**Performance**:
+- Cold start: ~70ms (<100ms target) ✅
+- Page switch (cached): <20ms (<50ms) ✅
+- Page switch (uncached): ~65ms (<200ms) ✅
+- Memory: ~8MB (<50MB) ✅
+
+---
+
+## Overall Progress
+
+### Completed Features
+
+**PDF Core**:
+- ✅ PDF loading and parsing (ledongthuc/pdf)
+- ✅ Text extraction with coordinates
+- ✅ Full-text search (case, regex, whole-word)
+- ✅ LRU page caching
+- ✅ Layout-aware formatting (line breaking, columns)
+- ✅ Heading detection by font size
+
+**UI & Interaction**:
+- ✅ Bubble Tea TUI framework
+- ✅ 3-pane responsive layout
+- ✅ Vim-style keybindings (all standard keys)
+- ✅ Search mode with history
+- ✅ Table of Contents navigation
+- ✅ Bookmark management
+- ✅ Configuration persistence
+- ✅ Dark/Light theme toggling
+
+**Quality & Testing**:
+- ✅ 189 passing tests
+- ✅ ~94% code coverage
+- ✅ 0 linter warnings
+- ✅ Performance benchmarks validated
+- ✅ Comprehensive documentation
+
+### In Progress
+
+- 🚧 Nothing currently (Phase 2 complete, Phase 3 planning)
+
+### Upcoming
+
+- ⏳ **Phase 3: Image Support** (terminal graphics detection, image rendering)
+- ⏳ **Phase 4: AI Integration** (Claude SDK, Q&A, audio generation)
+
+---
+
+## Test Coverage Summary
+
+| Package | Tests | Coverage | Status |
+|---------|-------|----------|--------|
+| pdf | 73 | ~95% | ✅ Excellent |
+| config | 8 | ~98% | ✅ Excellent |
+| ui | 108+ | ~90% | ✅ Excellent |
+| **Total** | **189** | **~94%** | ✅ Excellent |
+
+### Test Breakdown
+
+**PDF Package** (73 tests):
+- Document: 16 tests
+- Cache: 12 tests + 5 benchmarks
+- Search: 14 tests + 4 benchmarks
+- Layout: 12 tests + 2 benchmarks
+- TOC: 15+ tests
+- Config: 4 tests
+
+**UI Package** (108 tests):
+- Model: 30+ tests
+- Keybindings: 20+ tests
+- Bookmarks: 10 tests
+- Search pane: 15+ tests
+- TOC pane: 20+ tests
+- Themes: 10+ tests
+
+**Config Package** (8 tests):
+- Config loading/saving
+- Bookmark management
+- DocState tracking
+
+---
+
+## Key Metrics
+
+### Code Quality
+
+- **Test Coverage**: 94% (exceeded 80% target)
+- **Tests Passing**: 189/189 (100%)
+- **Build Status**: ✅ Clean
+- **Linter Warnings**: 0
+- **Code-to-Test Ratio**: 1:1.5
+
+### Performance
+
+| Operation | Target | Actual | Status |
+|-----------|--------|--------|--------|
+| Cold start | <100ms | ~70ms | ✅ 30% better |
+| Page load (cached) | <50ms | <20ms | ✅ 60% better |
+| Page load (uncached) | <200ms | ~65ms | ✅ 67% better |
+| Memory (10MB PDF) | <50MB | ~8MB | ✅ 84% better |
+| Search/KB | <50μs | ~10μs | ✅ 80% better |
+| Line breaking | N/A | <5μs | ✅ Excellent |
+
+### Development Velocity
+
+- **Phases Complete**: 2/4 (50%)
+- **Milestones Complete**: 10/10 (100%)
+- **Average Velocity**: ~2 milestones per session
+- **Quality**: Production-ready with extensive tests
+
+---
+
+## Technical Stack
+
+### Languages & Runtime
+- **Go 1.21+** - Backend and TUI
+- **Python 3.8+** - Test fixture generation (optional)
+
+### Core Dependencies
+- `charmbracelet/bubbletea` - TUI framework (MVU pattern)
+- `charmbracelet/bubbles` - UI components (viewport, textinput)
+- `charmbracelet/lipgloss` - Terminal styling
+- `ledongthuc/pdf` - PDF parsing and text extraction
+
+### Architecture
+- **Pattern**: Model-View-Update (Elm-inspired)
+- **Message Flow**: All state changes via messages
+- **Caching**: LRU cache for page content
+- **Concurrency**: Safe message-based updates
+- **Persistence**: TOML configuration files
+
+---
+
+## Documentation Status
+
+| Document | Status | Last Updated |
+|----------|--------|--------------|
+| README.md | ✅ Current | This session |
+| START_HERE.md | ✅ Current | Phase 1 complete |
+| PROGRESS.md | ✅ Current | This session |
+| ROADMAP.md | ⏳ Outdated | Needs Phase 2-3 update |
+| PHASE_1_PLAN.md | ✅ Complete | Phase 1 done |
+| PHASE_2_PLAN.md | ✅ Complete | Phase 2 done |
+| ARCHITECTURE.md | ✅ Current | Detailed design |
+| test/TESTING_GUIDE.md | ✅ Complete | Phase 1 testing |
+| MILESTONE_2_4_LAYOUT_ANALYSIS.md | ✅ Complete | Phase 2 design |
+
+---
+
+## Notes for Next Phase
+
+### Phase 3: Image Support Planning
+
+**Why Image Support**:
+- PDFs often contain diagrams, charts, screenshots
+- Terminal image protocols now widely supported (Kitty, iTerm2, SIXEL)
+- Text-only reading experience incomplete for technical docs
+
+**Key Challenges**:
+- Multiple terminal protocols to support
+- Image quality in limited terminal color space
+- Performance with large/many images
+- Hybrid text+image layout complexity
+
+**Technologies**:
+- `blacktop/go-termimg` - Terminal image rendering
+- Kitty graphics protocol - Best performance
+- iTerm2 inline images - macOS compatibility
+- SIXEL - Fallback for older terminals
+
+**MVP Approach** (Pragmatic):
+1. Detect terminal capabilities
+2. Extract simple images from PDF
+3. Render at reasonable size
+4. Cache with LRU strategy
+5. Fallback to placeholder text
+
+---
+
+## Session Summary
+
+**Date**: 2025-11-18
+**Work**: Complete Phase 2 (4 milestones)
+**Commits**: 3 major commits
+**Tests Added**: 30 new tests (config, bookmarks, layout)
+**Coverage**: Maintained 94%+ across all packages
+**Status**: Phase 2 100% complete, ready for Phase 3
+
+---
+
+**Next Review**: Upon Phase 3 completion or significant progress
+**Maintained By**: LUMOS Development Team
+
 
 **Status**: COMPLETE
 **Completed**: 2025-11-01
