@@ -44,6 +44,12 @@ type Model struct {
 	showSearchOptions    bool
 	showSearchHistory    bool
 
+	// Phase 2.3: Bookmarks & Configuration
+	cfg           *config.Config
+	bookmarkPane  *BookmarkPane
+	showBookmarks bool
+	docPath       string // Full path to current document
+
 	// Viewport
 	viewport    viewport.Model
 	metadataView viewport.Model
@@ -57,7 +63,10 @@ type Model struct {
 // NewModel creates a new application model
 func NewModel(document *pdf.Document) *Model {
 	cache := pdf.NewLRUCache(5)
-	theme := config.DarkTheme
+
+	// Load persistent configuration
+	cfg, _ := config.LoadConfig()
+	theme := config.GetTheme(cfg.UI.Theme)
 	styles := config.NewStyles(theme)
 
 	// Initialize viewport
@@ -71,6 +80,9 @@ func NewModel(document *pdf.Document) *Model {
 	searchHistoryManager := pdf.NewSearchHistoryManager(50)
 	searchOptionsPane := NewSearchOptionsPane(80, 10)
 	searchHistoryPane := NewSearchHistoryPane(80, 10, searchHistoryManager)
+
+	// Initialize bookmark pane
+	bookmarkPane := NewBookmarkPane(80, 10)
 
 	m := &Model{
 		document:             document,
@@ -91,6 +103,9 @@ func NewModel(document *pdf.Document) *Model {
 		advancedSearchResults: []pdf.SearchResultAdvanced{},
 		showSearchOptions:    false,
 		showSearchHistory:    false,
+		cfg:                  cfg,
+		bookmarkPane:         bookmarkPane,
+		showBookmarks:        false,
 	}
 
 	return m
@@ -186,6 +201,26 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.searchHistoryPane.Show()
 		} else {
 			m.searchHistoryPane.Hide()
+		}
+
+	case ToggleBookmarkMsg:
+		// Add or remove bookmark on current page
+		if m.cfg.HasBookmark(m.docPath, m.currentPage) {
+			m.cfg.RemoveBookmark(m.docPath, m.currentPage)
+		} else {
+			m.cfg.AddBookmark(m.docPath, m.currentPage, "")
+		}
+		m.cfg.Save()
+		// Update bookmark pane with latest bookmarks
+		m.bookmarkPane.SetBookmarks(m.cfg.GetBookmarks(m.docPath))
+
+	case ToggleBookmarkListMsg:
+		m.showBookmarks = !m.showBookmarks
+		if m.showBookmarks {
+			m.bookmarkPane.SetBookmarks(m.cfg.GetBookmarks(m.docPath))
+			m.bookmarkPane.Show()
+		} else {
+			m.bookmarkPane.Hide()
 		}
 	}
 

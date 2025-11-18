@@ -84,7 +84,7 @@ func main() {
 }
 
 func printHelp() {
-	fmt.Println(`LUMOS - PDF Dark Mode Reader
+	fmt.Print(`LUMOS - PDF Dark Mode Reader
 A developer-friendly PDF reader with dark mode and vim keybindings
 
 USAGE:
@@ -118,11 +118,11 @@ KEYBOARD SHORTCUTS:
 
 For more information, see documentation at:
   /Users/manu/Documents/LUXOR/PROJECTS/LUMOS/README.md
-`)
+` + "\n")
 }
 
 func printKeys() {
-	fmt.Println(`LUMOS - Keyboard Shortcuts
+	fmt.Print(`LUMOS - Keyboard Shortcuts
 
 NORMAL MODE
 ===========
@@ -173,5 +173,5 @@ TIPS
   • LRU caching keeps 5 pages in memory
   • Search is case-insensitive by default
   • Mark pages with vim marks (Phase 2+)
-`)
+` + "\n")
 }

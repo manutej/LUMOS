@@ -80,6 +80,10 @@ func (kh *KeyHandler) handleNormalKey(msg tea.KeyMsg) tea.Cmd {
 		return CycleDarkTheme
 	case "ctrl+t":
 		return ToggleTOC
+	case "m":
+		return ToggleBookmark
+	case "'", "`":
+		return ToggleBookmarkList
 	case "?":
 		return ToggleHelp
 
@@ -222,6 +226,14 @@ var (
 		return ToggleSearchHistoryMsg{}
 	}
 
+	ToggleBookmark = func() tea.Msg {
+		return ToggleBookmarkMsg{}
+	}
+
+	ToggleBookmarkList = func() tea.Msg {
+		return ToggleBookmarkListMsg{}
+	}
+
 	ToggleHelp = func() tea.Msg {
 		return ToggleHelpMsg{}
 	}
@@ -271,6 +283,10 @@ type ToggleSearchOptionsMsg struct{}
 
 type ToggleSearchHistoryMsg struct{}
 
+type ToggleBookmarkMsg struct{}
+
+type ToggleBookmarkListMsg struct{}
+
 // VimKeybindingReference provides a reference of all keybindings
 var VimKeybindingReference = map[string]string{
 	// Navigation - Line scrolling
@@ -304,6 +320,10 @@ var VimKeybindingReference = map[string]string{
 	"1":             "Switch to dark theme",
 	"2":             "Switch to light theme",
 	"3":             "Cycle through dark themes",
+
+	// Bookmarks
+	"m":             "Add/toggle bookmark on current page",
+	"'/backtick":    "Show bookmark list",
 
 	// UI Controls
 	"Tab":           "Cycle through panes (forward)",
