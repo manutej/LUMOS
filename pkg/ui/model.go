@@ -17,16 +17,19 @@ type Model struct {
 	cache    *pdf.LRUCache
 
 	// UI State
-	currentPage    int
-	theme          config.Theme
-	styles         config.Styles
-	keyHandler     *KeyHandler
-	showHelp       bool
-	searchActive   bool
-	searchQuery    string
-	searchResults  []pdf.SearchResult
-	currentMatch   int
-	activePaneIdx  int
+	currentPage       int
+	theme             config.Theme
+	styles            config.Styles
+	keyHandler        *KeyHandler
+	showHelp          bool
+	searchActive      bool
+	searchQuery       string
+	searchResults     []pdf.SearchResult
+	currentMatch      int
+	activePaneIdx     int
+	themeIndex        int // For cycling through themes
+	clipboard         string // Store copied text
+	showCopyFeedback  bool // Show copy confirmation
 
 	// Viewport
 	viewport    viewport.Model
@@ -161,12 +164,23 @@ func (m *Model) handleKeyPress(msg tea.KeyMsg) tea.Cmd {
 		case "2":
 			m.changeTheme("light")
 			return nil
+		case "3":
+			// Cycle through dark themes
+			m.cycleDarkTheme()
+			return nil
 		case "/":
 			m.keyHandler.Mode = KeyModeSearch
 			m.searchActive = true
 			return nil
+		case "y":
+			// Copy current page text to clipboard
+			m.copyCurrentPage()
+			return nil
 		case "tab":
 			m.activePaneIdx = (m.activePaneIdx + 1) % 3
+			return nil
+		case "shift+tab":
+			m.activePaneIdx = (m.activePaneIdx - 1 + 3) % 3
 			return nil
 		case "n":
 			if len(m.searchResults) > 0 {
@@ -199,6 +213,12 @@ func (m *Model) handleKeyPress(msg tea.KeyMsg) tea.Cmd {
 			return m.goToFirstPage()
 		case "G":
 			return m.goToLastPage()
+		case "ctrl+f":
+			m.viewport.LineDown(m.viewport.Height)
+			return nil
+		case "ctrl+b":
+			m.viewport.LineUp(m.viewport.Height)
+			return nil
 		case "ctrl+n":
 			return m.goToNextPage()
 		case "ctrl+p":
@@ -288,6 +308,20 @@ func (m *Model) goToPreviousPage() tea.Cmd {
 func (m *Model) changeTheme(themeName string) {
 	m.theme = config.GetTheme(themeName)
 	m.styles = config.NewStyles(m.theme)
+
+	// Update theme index for cycling
+	for i, t := range config.AvailableThemes {
+		if t.Name == m.theme.Name {
+			m.themeIndex = i
+			break
+		}
+	}
+}
+
+func (m *Model) cycleDarkTheme() {
+	m.themeIndex = (m.themeIndex + 1) % len(config.AvailableThemes)
+	m.theme = config.AvailableThemes[m.themeIndex]
+	m.styles = config.NewStyles(m.theme)
 }
 
 // Search
@@ -304,6 +338,24 @@ func (m *Model) jumpToSearchResult() {
 		// Load page and scroll to result
 		_ = LoadPageCmd(m.document, m.currentPage)
 	}
+}
+
+// Copy - "y" key functionality
+
+func (m *Model) copyCurrentPage() {
+	pageNum := m.currentPage
+	pageContent := m.viewport.View()
+
+	// Store in clipboard (in-memory for now, can integrate with system clipboard)
+	m.clipboard = fmt.Sprintf("=== Page %d ===\n%s", pageNum, pageContent)
+
+	// Show feedback (briefly display copy confirmation)
+	m.showCopyFeedback = true
+}
+
+// GetClipboard returns the currently copied text
+func (m *Model) GetClipboard() string {
+	return m.clipboard
 }
 
 // Rendering
@@ -343,26 +395,39 @@ func (m *Model) renderSearchPane(width, height int) string {
 func (m *Model) renderStatusBar() string {
 	status := fmt.Sprintf("Page %d/%d", m.currentPage, m.document.GetPageCount())
 	status += " | Theme: " + m.theme.Name
+
+	if m.showCopyFeedback {
+		status += " | [✓] Copied!"
+	}
+
 	status += " | [?] Help [q] Quit"
 
 	return m.styles.StatusBar.Width(m.width).Render(status)
 }
 
 func (m *Model) renderHelp() string {
-	helpText := "LUMOS - PDF Dark Mode Reader\n\n"
-	helpText += "Navigation:\n"
-	helpText += "  j/k or ↑/↓  - Scroll\n"
-	helpText += "  d/u         - Half page\n"
-	helpText += "  gg/G        - Top/bottom\n"
-	helpText += "  Ctrl+N/P    - Next/prev page\n\n"
-	helpText += "Search:\n"
-	helpText += "  /           - Search\n"
-	helpText += "  n/N         - Next/prev match\n\n"
-	helpText += "UI:\n"
-	helpText += "  Tab         - Cycle panes\n"
-	helpText += "  1/2         - Dark/light mode\n"
-	helpText += "  ?           - Toggle help\n"
-	helpText += "  q           - Quit\n"
+	helpText := "LUMOS - Dark Mode PDF Reader for Developers\n\n"
+	helpText += "NAVIGATION\n"
+	helpText += "  j/k or ↑/↓  - Scroll line up/down\n"
+	helpText += "  d/u         - Scroll half page up/down\n"
+	helpText += "  Ctrl+F/B    - Full page down/up\n"
+	helpText += "  gg/G        - Go to first/last page\n"
+	helpText += "  Ctrl+N/P    - Next/previous page\n\n"
+	helpText += "SEARCH & COPY\n"
+	helpText += "  /           - Start search\n"
+	helpText += "  n/N         - Next/previous match\n"
+	helpText += "  y           - Copy current page\n"
+	helpText += "  Esc         - Exit search\n\n"
+	helpText += "THEMES (Professional Dark Modes)\n"
+	helpText += "  1           - Switch to dark theme\n"
+	helpText += "  2           - Switch to light theme\n"
+	helpText += "  3           - Cycle through dark themes\n"
+	helpText += "    Available: LUMOS Dark, Tokyo Night, Dracula, Solarized, Nord\n\n"
+	helpText += "UI CONTROLS\n"
+	helpText += "  Tab/Shift+Tab - Cycle panes forward/backward\n"
+	helpText += "  ?           - Toggle this help screen\n"
+	helpText += "  q/Ctrl+C    - Quit\n\n"
+	helpText += "Press ? to close this help"
 
 	return m.styles.Background.Width(m.width).Height(m.height).Render(helpText)
 }

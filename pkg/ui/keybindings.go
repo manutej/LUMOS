@@ -237,29 +237,41 @@ type ToggleHelpMsg struct{}
 
 // VimKeybindingReference provides a reference of all keybindings
 var VimKeybindingReference = map[string]string{
-	// Navigation
+	// Navigation - Line scrolling
 	"j/↓":           "Scroll down one line",
 	"k/↑":           "Scroll up one line",
+	"h/←":           "Scroll left (wide PDFs)",
+	"l/→":           "Scroll right (wide PDFs)",
+
+	// Navigation - Page scrolling
 	"d":             "Scroll down half page",
 	"u":             "Scroll up half page",
-	"g":             "Go to top of document",
-	"G":             "Go to bottom of document",
+	"Ctrl+F":        "Scroll down full page",
+	"Ctrl+B":        "Scroll up full page",
+
+	// Navigation - Page jumps
+	"g":             "Go to first page",
+	"G":             "Go to last page",
 	"Ctrl+N":        "Go to next page",
 	"Ctrl+P":        "Go to previous page",
 
-	// Search
+	// Search & Copy
 	"/":             "Start search",
 	"n":             "Go to next match",
 	"N":             "Go to previous match",
+	"y":             "Copy current page text",
 	"Esc":           "Exit search",
 
-	// UI
-	"Tab":           "Cycle through panes",
-	"1":             "Switch to dark mode",
-	"2":             "Switch to light mode",
-	"?":             "Toggle help",
+	// Themes (Dark mode - core feature)
+	"1":             "Switch to dark theme",
+	"2":             "Switch to light theme",
+	"3":             "Cycle through dark themes",
+
+	// UI Controls
+	"Tab":           "Cycle through panes (forward)",
+	"Shift+Tab":     "Cycle through panes (backward)",
+	"?":             "Toggle help screen",
 
 	// General
-	"q/Ctrl+C":      "Quit",
-	":":             "Enter command mode",
+	"q/Ctrl+C":      "Quit application",
 }
