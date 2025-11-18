@@ -62,6 +62,10 @@ func (kh *KeyHandler) handleNormalKey(msg tea.KeyMsg) tea.Cmd {
 	// Search
 	case "/":
 		return EnterSearch
+	case "ctrl+\\", "ctrl+/":
+		return ToggleSearchOptions
+	case "ctrl+h":
+		return ToggleSearchHistory
 
 	// UI
 	case "tab":
@@ -210,6 +214,14 @@ var (
 		return ToggleTOCMsg{}
 	}
 
+	ToggleSearchOptions = func() tea.Msg {
+		return ToggleSearchOptionsMsg{}
+	}
+
+	ToggleSearchHistory = func() tea.Msg {
+		return ToggleSearchHistoryMsg{}
+	}
+
 	ToggleHelp = func() tea.Msg {
 		return ToggleHelpMsg{}
 	}
@@ -255,6 +267,10 @@ type ToggleHelpMsg struct{}
 
 type ToggleTOCMsg struct{}
 
+type ToggleSearchOptionsMsg struct{}
+
+type ToggleSearchHistoryMsg struct{}
+
 // VimKeybindingReference provides a reference of all keybindings
 var VimKeybindingReference = map[string]string{
 	// Navigation - Line scrolling
@@ -277,6 +293,8 @@ var VimKeybindingReference = map[string]string{
 
 	// Search & Copy
 	"/":             "Start search",
+	"Ctrl+\\":       "Toggle search options (regex, case, whole-word)",
+	"Ctrl+H":        "Toggle search history",
 	"n":             "Go to next match",
 	"N":             "Go to previous match",
 	"y":             "Copy current page text",

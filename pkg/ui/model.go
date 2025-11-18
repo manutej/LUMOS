@@ -36,6 +36,14 @@ type Model struct {
 	showTOC      bool
 	tocLoaded    bool
 
+	// Phase 2: Advanced Search
+	searchOptionsPane    *SearchOptionsPane
+	searchHistoryPane    *SearchHistoryPane
+	searchHistoryManager *pdf.SearchHistoryManager
+	advancedSearchResults []pdf.SearchResultAdvanced
+	showSearchOptions    bool
+	showSearchHistory    bool
+
 	// Viewport
 	viewport    viewport.Model
 	metadataView viewport.Model
@@ -59,19 +67,30 @@ func NewModel(document *pdf.Document) *Model {
 	// Initialize TOC pane
 	tocPane := NewTOCPane(80, 20)
 
+	// Initialize advanced search components
+	searchHistoryManager := pdf.NewSearchHistoryManager(50)
+	searchOptionsPane := NewSearchOptionsPane(80, 10)
+	searchHistoryPane := NewSearchHistoryPane(80, 10, searchHistoryManager)
+
 	m := &Model{
-		document:      document,
-		cache:         cache,
-		currentPage:   1,
-		theme:         theme,
-		styles:        styles,
-		keyHandler:    NewKeyHandler(),
-		showHelp:      false,
-		activePaneIdx: 1, // Start in viewer pane
-		viewport:      vp,
-		tocPane:       tocPane,
-		showTOC:       false,
-		tocLoaded:     false,
+		document:             document,
+		cache:                cache,
+		currentPage:          1,
+		theme:                theme,
+		styles:               styles,
+		keyHandler:           NewKeyHandler(),
+		showHelp:             false,
+		activePaneIdx:        1, // Start in viewer pane
+		viewport:             vp,
+		tocPane:              tocPane,
+		showTOC:              false,
+		tocLoaded:            false,
+		searchOptionsPane:    searchOptionsPane,
+		searchHistoryPane:    searchHistoryPane,
+		searchHistoryManager: searchHistoryManager,
+		advancedSearchResults: []pdf.SearchResultAdvanced{},
+		showSearchOptions:    false,
+		showSearchHistory:    false,
 	}
 
 	return m
@@ -152,6 +171,22 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case SearchMsg:
 		cmd = m.handleSearch(msg)
+
+	case ToggleSearchOptionsMsg:
+		m.showSearchOptions = !m.showSearchOptions
+		if m.showSearchOptions {
+			m.searchOptionsPane.Show()
+		} else {
+			m.searchOptionsPane.Hide()
+		}
+
+	case ToggleSearchHistoryMsg:
+		m.showSearchHistory = !m.showSearchHistory
+		if m.showSearchHistory {
+			m.searchHistoryPane.Show()
+		} else {
+			m.searchHistoryPane.Hide()
+		}
 	}
 
 	return m, cmd
