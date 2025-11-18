@@ -6,10 +6,23 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **LUMOS** is a dark mode PDF reader for developers built with Go and Bubble Tea TUI framework. It features vim-style keybindings, 3-pane layout, full-text search, and LRU page caching. A companion to LUMINA (markdown viewer).
 
-**Current Phase**: Phase 1 MVP (Milestone 1.4 - Basic TUI Framework)
-**Progress**: 50% complete (3/6 milestones done)
-**Test Coverage**: 94.4%
-**Status**: Production-ready core with TUI in development
+**Current Phase**: Phase 1 MVP (Milestone 1.6 - Dark Mode Polish)
+**Progress**: 83% complete (5/6 milestones done)
+**Test Coverage**: 94.4% (PDF), 47.8% (UI)
+**Status**: Functionally complete, pending test coverage improvement
+
+## Quick References
+
+- **Dependencies & Skills**: See `.claude/DEPENDENCIES.md` for:
+  - Complete dependency breakdown
+  - Relevant global skills (golang-backend-development, frontend-architecture, testing)
+  - Development workflow with dependencies
+  - Troubleshooting guide
+
+- **Specifications**: See `.specify/` for:
+  - Complete Phase 1 specification
+  - Milestone requirements and acceptance criteria
+  - Architecture decisions and testing strategy
 
 ## Common Commands
 

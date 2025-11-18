@@ -3,21 +3,101 @@
 **Project**: LUMOS - Dark Mode PDF Reader
 **Phase**: 1 (MVP Development)
 **Current Milestone**: 1.3 ✅ COMPLETE
-**Last Updated**: 2025-11-01
+**Last Updated**: 2025-11-18
 
 ---
 
 ## Quick Status
 
 ```
-Phase 1: MVP Development               [██████████░░░░░░░░░░] 50% (3/6 milestones)
+Phase 1: MVP Development               [████████████████░░░░] 83% (5/6 milestones)
 ├─ Milestone 1.1: Build & Compile      [████████████████████] 100% ✅ COMPLETE
 ├─ Milestone 1.2: Core Testing         [████████████████████] 100% ✅ COMPLETE
 ├─ Milestone 1.3: Test PDF Fixtures    [████████████████████] 100% ✅ COMPLETE
-├─ Milestone 1.4: Basic TUI Framework  [░░░░░░░░░░░░░░░░░░░░]   0% ⏳ NEXT
-├─ Milestone 1.5: Vim Keybindings      [░░░░░░░░░░░░░░░░░░░░]   0%
-└─ Milestone 1.6: Dark Mode Polish     [░░░░░░░░░░░░░░░░░░░░]   0%
+├─ Milestone 1.4: Basic TUI Framework  [█████████████████░░░]  95% ✅ COMPLETE*
+├─ Milestone 1.5: Vim Keybindings      [█████████████████░░░]  95% ✅ COMPLETE*
+└─ Milestone 1.6: Dark Mode Polish     [██████████░░░░░░░░░░]  50% ⏳ IN PROGRESS
+
+* Functionally complete, pending test coverage improvement (47.8% → 80%+)
 ```
+
+---
+
+## Milestone 1.4 & 1.5: TUI Framework + Vim Keybindings ✅*
+
+**Status**: FUNCTIONALLY COMPLETE (pending test coverage)
+**Discovered**: 2025-11-18 (during spec audit)
+**Test Coverage**: 47.8% (need 80%+)
+
+### Discovery Summary
+
+During specification framework implementation, discovered that **Milestones 1.4 and 1.5 were already fully implemented** but not documented. The TUI framework with comprehensive Vim keybindings exists and functions correctly.
+
+### Achievements - Milestone 1.4 (TUI Framework)
+
+✅ **Full Bubble Tea MVU Architecture** - Complete Model-View-Update pattern
+✅ **3-Pane Responsive Layout** - 20% metadata | 60% viewer | 20% search
+✅ **Viewport Integration** - Scrollable content with bubbles/viewport
+✅ **Status Bar** - Page info, filename, key hints
+✅ **Window Resize** - Dynamic pane recalculation
+✅ **Async Page Loading** - Non-blocking with tea.Cmd
+✅ **Error Handling** - Graceful display of errors
+✅ **Help Screen** - Toggle with ?
+
+### Achievements - Milestone 1.5 (Vim Keybindings)
+
+✅ **Complete Vim Navigation** - j/k/d/u/gg/G all working
+✅ **Modal Editing** - Normal/Search/Command modes
+✅ **Page Navigation** - Ctrl+N/P for next/previous page
+✅ **Search Mode** - / to enter, n/N for navigation
+✅ **UI Controls** - Tab (panes), 1/2 (themes), ? (help)
+✅ **KeyHandler Architecture** - Extensible modal system
+✅ **Keybinding Reference** - Complete map in keybindings.go
+
+### Test Results
+
+| Package | Tests | Passing | Coverage |
+|---------|-------|---------|----------|
+| pkg/pdf | 42 | 42 (100%) | 94.4% ✅ |
+| pkg/ui  | 9  | 9 (100%)  | 47.8% ⚠️ |
+
+### Coverage Gap Analysis
+
+**What's Tested** (47.8%):
+- Core Update() message handlers
+- Navigation logic
+- Theme switching
+- Window resize
+- Model initialization
+
+**What Needs Testing** (~32.2% gap):
+- Rendering functions (renderMetadataPane, renderViewerPane, etc.)
+- Status bar formatting
+- Help screen rendering
+- Search execution logic
+- Layout calculations
+- KeyHandler modal switching
+
+### Remaining Work
+
+1. **UI Test Coverage** (Critical - 4-6 hours)
+   - Add 15-20 tests for rendering functions
+   - Test layout calculations
+   - Test search functionality
+   - Test modal keybinding logic
+   - Target: 80%+ coverage
+
+2. **Performance Verification** (1 hour)
+   - Measure startup time (<70ms target)
+   - Measure render performance (<16ms target)
+   - Verify memory usage (<10MB target)
+
+### Documentation
+
+✅ `PHASE_1_MILESTONE_1_4_1_5_REVIEW.md` - Complete combined review
+✅ `pkg/ui/model.go` - Well-commented TUI implementation
+✅ `pkg/ui/keybindings.go` - Complete keybinding reference
+✅ `cmd/lumos/main.go` - Help and key reference functions
 
 ---
 
@@ -140,45 +220,40 @@ Phase 1: MVP Development               [██████████░░░�
 
 ---
 
-## Next: Milestone 1.4 - Basic TUI Framework ⏳
+## Next: Milestone 1.6 - Dark Mode Polish ⏳
 
-**Status**: READY TO START
+**Status**: IN PROGRESS (50% complete)
 **Priority**: HIGH
 
 ### Objectives
 
-1. Implement Bubble Tea TUI framework
-   - Initialize tea.Program
-   - Create Model with document state
-   - Implement Update and View functions
+1. ✅ Theme switching implemented (1/2 keys work)
+2. ⏳ Refine color contrast for dark mode
+3. ⏳ Optimize border styles and spacing
+4. ⏳ Test terminal compatibility (iTerm2, Terminal.app, Alacritty)
+5. ⏳ Performance optimization and profiling
 
-2. Create basic page view component
-   - Display PDF page content
-   - Handle page boundaries
-   - Show page numbers
+### Critical Path Items
 
-3. Add keyboard navigation
-   - j/k for line scrolling
-   - Page Up/Page Down for pages
-   - g/G for first/last page
-   - q for quit
+**Before Milestone 1.6 completion:**
+1. **Increase UI test coverage** (47.8% → 80%+)
+   - Add rendering function tests
+   - Add layout calculation tests
+   - Add search functionality tests
+   - Target: 15-20 new tests
 
-4. Implement status bar
-   - Current page / total pages
-   - File name display
-   - Key hints
-
-5. Test TUI interactions
-   - Manual testing
-   - Screenshot/output validation
+2. **Verify performance targets**
+   - Startup time <70ms
+   - Render time <16ms
+   - Memory <10MB baseline
 
 ### Expected Deliverables
 
-- `cmd/lumos/main.go` - TUI application entry point
-- `pkg/ui/` - TUI components package
-- Basic vim-style navigation working
-- Status bar implemented
-- README with usage instructions
+- Test coverage >80% for all packages
+- Performance benchmarks documented
+- Theme refinement complete
+- Terminal compatibility verified
+- Phase 1 MVP COMPLETE
 
 ---
 
@@ -189,38 +264,56 @@ Phase 1: MVP Development               [██████████░░░�
 - ✅ Core PDF package (document, search, cache)
 - ✅ Configuration system
 - ✅ Build system
-- ✅ Unit tests and benchmarks
-- ✅ Test PDF fixtures
-- ✅ Integration tests
+- ✅ Unit tests and benchmarks (42 tests for PDF package)
+- ✅ Test PDF fixtures (3 fixtures)
+- ✅ Integration tests (94.4% coverage for PDF)
 - ✅ Search implementation
+- ✅ Full Bubble Tea TUI framework
+- ✅ 3-pane responsive layout
+- ✅ Complete Vim keybinding system
+- ✅ Modal editing (Normal/Search/Command)
+- ✅ Theme switching capability
+- ✅ Async page loading
+- ✅ Window resize handling
+- ✅ Status bar and help screen
 
 ### In Progress
-- None currently
+- ⏳ UI package test coverage (47.8% → 80%+)
+- ⏳ Performance verification
+- ⏳ Dark mode polish (Milestone 1.6)
 
 ### Upcoming
-- ⏳ Basic TUI framework (Milestone 1.4)
-- ⏳ Vim keybindings (Milestone 1.5)
-- ⏳ Dark mode theme (Milestone 1.6)
+- ⏳ Final polish and optimization
+- ⏳ Phase 1 completion review
+- Phase 2: Enhanced viewing features
 
 ---
 
 ## Key Metrics
 
 ### Code Quality
-- **Test Coverage**: 94.4% (exceeded 80% target)
-- **Tests Passing**: 42/42 (100%)
+- **PDF Package Coverage**: 94.4% ✅ (exceeded 80% target)
+- **UI Package Coverage**: 47.8% ⚠️ (need 80%+)
+- **Combined Coverage**: ~71%
+- **Tests Passing**: 51/51 (100%)
 - **Build Status**: ✅ Clean
-- **Code-to-Test Ratio**: 1:1.2
+- **Code-to-Test Ratio**: 1:1.1
 
-### Performance
+### Performance (PDF Package)
 - **Cache Operations**: <100ns (6-12x better than target)
 - **Search Operations**: <50μs (5x better than target)
 - **Binary Size**: 4.6MB
 
+### Performance (TUI - To Verify)
+- **Startup Time**: ❓ (target <70ms)
+- **Render Time**: ❓ (target <16ms)
+- **Memory Usage**: ❓ (target <10MB)
+
 ### Development Velocity
-- **Milestones Completed**: 3/6 (50%)
-- **Average Time per Milestone**: <1 day
-- **Projected Phase 1 Completion**: 3-4 days
+- **Milestones Completed**: 5/6 (83%)
+- **Functionally Complete**: Milestones 1.1-1.5
+- **Remaining Work**: Test coverage + polish
+- **Projected Phase 1 Completion**: 8-11 hours
 
 ---
 
@@ -303,4 +396,33 @@ Phase 1: MVP Development               [██████████░░░�
 - PDF libraries have quirks (character spacing with reportlab PDFs)
 - Documentation pays dividends for future development
 
-**Next Session**: Start Milestone 1.4 - Basic TUI Framework
+### Session 2025-11-18 (Spec Audit & Discovery)
+
+**Focus**: Specification Framework Implementation & Milestone Discovery
+
+**Work Done**:
+- Created comprehensive .specify/ framework (11 specification documents)
+- Implemented spec-kit methodology with constitution, priorities, ADRs
+- Conducted code audit to verify implementation status
+- Discovered Milestones 1.4 and 1.5 were already complete
+- Created combined milestone review document
+- Fixed linter warnings in cmd/lumos/main.go
+- Updated PROGRESS.md to reflect actual status
+
+**Key Discoveries**:
+- TUI framework fully implemented with Bubble Tea MVU pattern
+- Complete Vim keybinding system with modal editing
+- 3-pane responsive layout working correctly
+- Theme switching capability present
+- All functional requirements for 1.4 and 1.5 met
+- Test coverage gap identified (47.8% vs 80% target)
+- Performance verification pending
+
+**Lessons Learned**:
+- Specification audits reveal hidden progress
+- Implementation can outpace documentation
+- Code review critical before new development
+- Test coverage discipline needs improvement
+- Documentation must stay synchronized with code
+
+**Next Session**: Increase UI test coverage (47.8% → 80%+) and verify performance targets

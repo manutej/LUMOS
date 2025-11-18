@@ -84,7 +84,7 @@ func main() {
 }
 
 func printHelp() {
-	fmt.Println(`LUMOS - PDF Dark Mode Reader
+	fmt.Print(`LUMOS - PDF Dark Mode Reader
 A developer-friendly PDF reader with dark mode and vim keybindings
 
 USAGE:
@@ -122,7 +122,7 @@ For more information, see documentation at:
 }
 
 func printKeys() {
-	fmt.Println(`LUMOS - Keyboard Shortcuts
+	fmt.Print(`LUMOS - Keyboard Shortcuts
 
 NORMAL MODE
 ===========
