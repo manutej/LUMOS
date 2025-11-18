@@ -66,10 +66,16 @@ func (kh *KeyHandler) handleNormalKey(msg tea.KeyMsg) tea.Cmd {
 	// UI
 	case "tab":
 		return CyclePane
+	case "shift+tab":
+		return CyclePanePrev
 	case "1":
 		return ToggleDarkMode
 	case "2":
 		return ToggleLightMode
+	case "3":
+		return CycleDarkTheme
+	case "ctrl+t":
+		return ToggleTOC
 	case "?":
 		return ToggleHelp
 
@@ -184,12 +190,24 @@ var (
 		return PaneChangeMsg{Direction: "next"}
 	}
 
+	CyclePanePrev = func() tea.Msg {
+		return PaneChangeMsg{Direction: "prev"}
+	}
+
 	ToggleDarkMode = func() tea.Msg {
 		return ThemeChangeMsg{Theme: "dark"}
 	}
 
 	ToggleLightMode = func() tea.Msg {
 		return ThemeChangeMsg{Theme: "light"}
+	}
+
+	CycleDarkTheme = func() tea.Msg {
+		return ThemeChangeMsg{Theme: "cycle"}
+	}
+
+	ToggleTOC = func() tea.Msg {
+		return ToggleTOCMsg{}
 	}
 
 	ToggleHelp = func() tea.Msg {
@@ -230,10 +248,12 @@ type PaneChangeMsg struct {
 }
 
 type ThemeChangeMsg struct {
-	Theme string // "dark" or "light"
+	Theme string // "dark", "light", or "cycle"
 }
 
 type ToggleHelpMsg struct{}
+
+type ToggleTOCMsg struct{}
 
 // VimKeybindingReference provides a reference of all keybindings
 var VimKeybindingReference = map[string]string{
@@ -270,6 +290,7 @@ var VimKeybindingReference = map[string]string{
 	// UI Controls
 	"Tab":           "Cycle through panes (forward)",
 	"Shift+Tab":     "Cycle through panes (backward)",
+	"Ctrl+T":        "Toggle table of contents",
 	"?":             "Toggle help screen",
 
 	// General

@@ -31,6 +31,11 @@ type Model struct {
 	clipboard         string // Store copied text
 	showCopyFeedback  bool // Show copy confirmation
 
+	// Phase 2: Table of Contents
+	tocPane      *TOCPane
+	showTOC      bool
+	tocLoaded    bool
+
 	// Viewport
 	viewport    viewport.Model
 	metadataView viewport.Model
@@ -51,6 +56,9 @@ func NewModel(document *pdf.Document) *Model {
 	vp := viewport.New(80, 20)
 	vp.Style = styles.Background
 
+	// Initialize TOC pane
+	tocPane := NewTOCPane(80, 20)
+
 	m := &Model{
 		document:      document,
 		cache:         cache,
@@ -61,6 +69,9 @@ func NewModel(document *pdf.Document) *Model {
 		showHelp:      false,
 		activePaneIdx: 1, // Start in viewer pane
 		viewport:      vp,
+		tocPane:       tocPane,
+		showTOC:       false,
+		tocLoaded:     false,
 	}
 
 	return m
@@ -68,7 +79,37 @@ func NewModel(document *pdf.Document) *Model {
 
 // Init initializes the model
 func (m *Model) Init() tea.Cmd {
+	// Load the initial page
 	return LoadPageCmd(m.document, m.currentPage)
+}
+
+// LoadTOC loads the table of contents from the document
+func (m *Model) LoadTOC() tea.Cmd {
+	return func() tea.Msg {
+		if m.document != nil {
+			toc, err := m.document.ExtractTableOfContents()
+			if err == nil && toc != nil {
+				return TOCLoadedMsg{
+					TOC: toc,
+				}
+			}
+		}
+		return TOCLoadedMsg{
+			TOC: &pdf.TableOfContents{
+				Entries: []pdf.TOCEntry{},
+				Source:  "none",
+			},
+		}
+	}
+}
+
+// ToggleTOC toggles the table of contents display
+func (m *Model) ToggleTOC() {
+	if !m.tocLoaded {
+		// Load TOC on first toggle
+		m.LoadTOC()
+	}
+	m.showTOC = !m.showTOC
 }
 
 // Update handles messages
@@ -96,6 +137,18 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case ToggleHelpMsg:
 		m.showHelp = !m.showHelp
+
+	case ToggleTOCMsg:
+		if !m.tocLoaded {
+			cmd = m.LoadTOC()
+		} else {
+			m.showTOC = !m.showTOC
+		}
+
+	case TOCLoadedMsg:
+		m.tocPane.SetTableOfContents(msg.TOC)
+		m.tocLoaded = true
+		m.showTOC = true
 
 	case SearchMsg:
 		cmd = m.handleSearch(msg)
