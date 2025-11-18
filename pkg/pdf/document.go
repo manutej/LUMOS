@@ -30,6 +30,7 @@ type PageInfo struct {
 	WordCount  int
 	HasImages  bool
 	HasTables  bool
+	Elements   []TextElement // Raw text elements with layout information
 }
 
 // NewDocument creates a new PDF document from a file path
@@ -80,7 +81,8 @@ func (d *Document) GetPage(pageNum int) (*PageInfo, error) {
 
 	// Check LRU cache first
 	if cached, exists := d.cache.Get(pageNum); exists {
-		return d.createPageInfo(pageNum, cached), nil
+		// Return cached content without elements (they would be recalculated on demand)
+		return d.createPageInfo(pageNum, cached, nil), nil
 	}
 
 	// Extract text from page
@@ -95,17 +97,65 @@ func (d *Document) GetPage(pageNum int) (*PageInfo, error) {
 		return nil, fmt.Errorf("page %d is empty or null", pageNum)
 	}
 
-	// Extract plain text from page
-	content := ""
+	// Extract text elements with layout information
 	texts := page.Content().Text
+	elements := make([]TextElement, 0, len(texts))
+
 	for _, text := range texts {
-		content += text.S + " "
+		elements = append(elements, TextElement{
+			Text:     text.S,
+			X:        text.X,
+			Y:        text.Y,
+			FontSize: text.FontSize,
+			Font:     text.Font,
+			Width:    text.W,
+		})
 	}
+
+	// Use LayoutAnalyzer to format text with proper line breaks
+	analyzer := NewLayoutAnalyzer()
+	content := analyzer.ExtractWithLineBreaks(elements)
 
 	// Store in LRU cache (will evict old pages if full)
 	d.cache.Put(pageNum, content)
 
-	return d.createPageInfo(pageNum, content), nil
+	return d.createPageInfo(pageNum, content, elements), nil
+}
+
+// GetRawElements extracts raw text elements with layout information from a page
+// without formatting or line breaking. Useful for layout analysis.
+func (d *Document) GetRawElements(pageNum int) ([]TextElement, error) {
+	if pageNum < 1 || pageNum > d.pages {
+		return nil, fmt.Errorf("page number out of range: %d", pageNum)
+	}
+
+	// Extract raw text elements from page
+	f, r, err := pdf.Open(d.filepath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to open PDF: %w", err)
+	}
+	defer f.Close()
+
+	page := r.Page(pageNum)
+	if page.V.IsNull() {
+		return nil, fmt.Errorf("page %d is empty or null", pageNum)
+	}
+
+	texts := page.Content().Text
+	elements := make([]TextElement, 0, len(texts))
+
+	for _, text := range texts {
+		elements = append(elements, TextElement{
+			Text:     text.S,
+			X:        text.X,
+			Y:        text.Y,
+			FontSize: text.FontSize,
+			Font:     text.Font,
+			Width:    text.W,
+		})
+	}
+
+	return elements, nil
 }
 
 // GetPageRange retrieves text from a range of pages
@@ -185,7 +235,7 @@ func (d *Document) CacheStats() CacheStats {
 
 // Helper functions
 
-func (d *Document) createPageInfo(pageNum int, text string) *PageInfo {
+func (d *Document) createPageInfo(pageNum int, text string, elements []TextElement) *PageInfo {
 	lineCount := countLines(text)
 	wordCount := countWords(text)
 
@@ -194,6 +244,7 @@ func (d *Document) createPageInfo(pageNum int, text string) *PageInfo {
 		Text:      text,
 		LineCount: lineCount,
 		WordCount: wordCount,
+		Elements:  elements,
 		// TODO: Detect images and tables
 		HasImages: false,
 		HasTables: false,
