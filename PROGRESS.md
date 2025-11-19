@@ -24,13 +24,13 @@ Phase 2: Enhanced Viewing              [█████████████�
 ├─ Milestone 2.3: Config & Bookmarks   [████████████████████] 100% ✅ COMPLETE
 └─ Milestone 2.4: Layout Preservation  [████████████████████] 100% ✅ COMPLETE
 
-Phase 3: Image Support                 [██████████░░░░░░░░░░]  50% 🚧 IN PROGRESS
+Phase 3: Image Support                 [███████████████░░░░░░]  75% 🚧 IN PROGRESS
 ├─ Milestone 3.1: Infrastructure       [████████████████████] 100% ✅ COMPLETE
 ├─ Milestone 3.2: LRU Image Cache      [████████████████████] 100% ✅ COMPLETE
 ├─ Milestone 3.3: UI Integration       [████████████████████] 100% ✅ COMPLETE
 ├─ Milestone 3.4: Pdfcpu Integration   [████████████████████] 100% ✅ COMPLETE
-├─ Milestone 3.5: Terminal Rendering   [░░░░░░░░░░░░░░░░░░░░]   0% ⏳ NEXT
-└─ Milestone 3.6: Polish & Optimization [░░░░░░░░░░░░░░░░░░░░]   0% ⏳ PLANNED
+├─ Milestone 3.5: Terminal Rendering   [████████████████████] 100% ✅ COMPLETE
+└─ Milestone 3.6: Polish & Optimization [░░░░░░░░░░░░░░░░░░░░]   0% ⏳ NEXT
 
 Phase 4: AI Integration                [░░░░░░░░░░░░░░░░░░░░]   0% ⏳ PLANNED
 ```
@@ -266,15 +266,86 @@ Terminal updated
 4. **Well-Tested**: 100% test coverage for extraction paths
 5. **Pragmatic**: Complete feature with fallback strategy
 
-### Phase 3 Success Metrics (3.1-3.4)
+### Milestone 3.5: Terminal Graphics Protocol Rendering ✅
+
+**Status**: COMPLETE
+**Files**:
+- `pkg/ui/renderer.go` (modified) - Full implementation of all rendering methods
+- `pkg/ui/renderer_test.go` (new) - 18 comprehensive tests + 4 benchmarks
+
+**Achievements**:
+- ✅ Kitty graphics protocol (modern, base64 PNG encoding with chunking)
+- ✅ iTerm2 inline images (macOS, escape sequence with size hints)
+- ✅ SIXEL graphics (legacy terminal support, 6-pixel strips)
+- ✅ Unicode halfblock rendering (universal fallback, all terminals)
+- ✅ PNG encoding and image resizing
+- ✅ Brightness-based pixel sampling for character selection
+- ✅ Error handling with fallback to text rendering
+
+**Implementation Details**:
+
+**Kitty Protocol**:
+- Base64 encodes PNG-encoded images
+- Kitty escape sequence: `\033_Ga=T,f=100,s=WIDTH,v=HEIGHT;\<base64>\033\\`
+- Supports chunking for large images (4095 char chunks)
+- Format ID 100 = PNG, T = transmission mode
+
+**iTerm2 Inline Images**:
+- Base64 encodes image data
+- iTerm2 escape sequence: `\033]1337;File=width=WIDTHpx;height=HEIGHTpx;inline=1:\<base64>\a`
+- Simpler than Kitty but macOS-specific
+- Works over SSH with iTerm2 enabled
+
+**SIXEL Graphics**:
+- 6-pixel height strips for vertical encoding
+- Brightness threshold sampling (>50% = set bit)
+- 6-bit encoding per vertical strip
+- Escape sequence: `\033Pq\<sixel>\033\\`
+- Works on XTerm, MLTerm, Mintty (older terminals)
+
+**Halfblock Unicode**:
+- 4 Unicode block characters: space, ▄ (lower), ▀ (upper), █ (full)
+- 2x1 pixel groups -> 1 character
+- Brightness threshold for pixel state
+- Luminance formula: (77*R + 150*G + 29*B) / 256
+- Universal support (all terminals, all platforms)
+
+**Testing Coverage**:
+- 18 new tests for renderer functionality:
+  - Renderer creation and configuration
+  - All rendering modes (disabled, text, graphics)
+  - Image scaling and size calculation
+  - All format-specific renderers
+  - Text fallback behavior
+  - Pixel brightness calculations
+  - Out-of-bounds access
+  - Format labels
+- 4 performance benchmarks
+- 2 test image generators (gradient + color quadrants)
+
+**Test Results**:
+- All 231 tests passing (↑ 18 new)
+- Edge cases validated (invalid dimensions, out-of-bounds)
+- Fallback chain verified
+- Performance acceptable for TUI rendering
+
+**Design Highlights**:
+1. **Progressive Enhancement**: Best format available, fallback chain
+2. **Error Resilience**: Encoding failures → text rendering
+3. **Terminal Agnostic**: Detects capabilities, adapts
+4. **No External Deps**: All stdlib image processing
+5. **Pragmatic**: Complete feature without complex optimizations
+
+### Phase 3 Success Metrics (3.1-3.5)
 
 | Metric | Target | Actual | Status |
 |--------|--------|--------|--------|
-| Milestones 3.1-3.4 Complete | 4/4 | 4/4 | ✅ 100% |
-| Tests Passing | 100% | 213/213 | ✅ Perfect |
+| Milestones 3.1-3.5 Complete | 5/5 | 5/5 | ✅ 100% |
+| Tests Passing | 100% | 231/231 | ✅ Perfect |
 | No Breaking Changes | Yes | Yes | ✅ Confirmed |
 | Build Status | Clean | Clean | ✅ Verified |
 | Test Coverage | >90% | ~94% | ✅ Excellent |
+| New Tests This Phase | 30+ | 48 | ✅ Excellent |
 
 ---
 
@@ -357,11 +428,10 @@ Terminal updated
 
 ### In Progress
 
-- 🚧 **Phase 3.5**: Terminal image rendering implementation
+- 🚧 **Phase 3.6**: Final polish, optimization & integration testing
 
 ### Upcoming
 
-- ⏳ **Phase 3.6**: Polish, optimization & final testing
 - ⏳ **Phase 4**: AI Integration (Claude SDK, Q&A, audio generation)
 
 ---
@@ -372,13 +442,14 @@ Terminal updated
 |---------|-------|----------|--------|
 | pdf | 98 | ~95% | ✅ Excellent |
 | config | 8 | ~98% | ✅ Excellent |
-| ui | 108+ | ~90% | ✅ Excellent |
-| **Total** | **214+** | **~94%** | ✅ Excellent |
+| ui | 126+ | ~90% | ✅ Excellent |
+| **Total** | **232+** | **~94%** | ✅ Excellent |
 
 **Phase 3 New Tests**:
 - Milestone 3.1-3.2: Image types and cache operations (19 tests + 3 benchmarks)
 - Milestone 3.4: Image extraction operations (11 tests + 2 benchmarks)
-- Total new: 30 tests + 5 benchmarks
+- Milestone 3.5: Terminal rendering operations (18 tests + 4 benchmarks)
+- Total new: 48 tests + 9 benchmarks
 
 ### Test Breakdown
 
@@ -392,13 +463,14 @@ Terminal updated
 - Image Cache: 9 tests + 3 benchmarks (Phase 3.2)
 - Image Extraction: 11 tests + 2 benchmarks (Phase 3.4)
 
-**UI Package** (108 tests):
+**UI Package** (126+ tests):
 - Model: 30+ tests (includes image state)
 - Keybindings: 20+ tests (includes 'i' toggle)
 - Bookmarks: 10 tests
 - Search pane: 15+ tests
 - TOC pane: 20+ tests
 - Themes: 10+ tests
+- Renderer: 18 tests + 4 benchmarks (Phase 3.5 - all graphics protocols)
 
 **Config Package** (8 tests):
 - Config loading/saving
@@ -514,28 +586,35 @@ Terminal updated
 **Coverage**: Maintained 94%+ across all packages
 **Status**: Phase 2 100% complete, ready for Phase 3
 
-### Session 2: Phase 3.1-3.4 Image Support Foundation & Extraction
+### Session 2: Phase 3.1-3.5 Image Support Complete (75%)
 **Date**: 2025-11-18
-**Work**: Complete Phase 3.1-3.4 (infrastructure, caching, UI, extraction)
+**Work**: Complete Phase 3.1-3.5 (infrastructure, caching, UI, extraction, rendering)
 **Commits**:
 - Phase 3.3: UI integration for image support (1f9ab10)
 - Phase 3.4: Pdfcpu integration for extraction (a46f2d4)
-**Tests Added**: 30 new tests + 5 benchmarks
+- Phase 3.5: Terminal graphics rendering (59d61b7)
+**Tests Added**: 48 new tests + 9 benchmarks
 **Coverage**: Maintained ~94% across all packages
-**Status**: Phase 3.1-3.4 complete (50% of Phase 3), ready for 3.5 rendering
+**Status**: Phase 3.1-3.5 complete (75% of Phase 3), ready for 3.6 polish
 
 **Key Achievements This Session**:
 - Fixed test compilation issues (utility scripts)
-- Implemented full image extraction pipeline
+- Implemented full image extraction pipeline (pdfcpu)
 - Added graceful fallback for text-only PDFs
-- Created 30 new tests (all passing)
+- Implemented all 4 terminal graphics protocols:
+  * Kitty graphics (modern, base64 PNG with chunking)
+  * iTerm2 inline images (macOS compatibility)
+  * SIXEL graphics (legacy terminal support)
+  * Unicode halfblock (universal fallback)
+- Created 48 new tests (all passing)
 - Zero breaking changes
-- Clean, pragmatic MVP architecture
+- Clean, pragmatic MVP architecture with complete feature parity
 
 ---
 
-**Next Review**: Upon Phase 3.5 completion (terminal rendering)
+**Next Review**: Upon Phase 3.6 completion (final Phase 3 polish)
 **Maintained By**: LUMOS Development Team
+**Last Session Achievement**: Phase 3 75% complete (5/6 milestones)
 
 
 **Status**: COMPLETE
