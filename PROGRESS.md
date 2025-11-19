@@ -1,8 +1,8 @@
 # LUMOS Development Progress
 
 **Project**: LUMOS - Dark Mode PDF Reader
-**Phase**: 3 (Image Support) 🚧 IN PROGRESS
-**Current Milestone**: 3.3 ✅ COMPLETE
+**Phase**: 1 (MVP Development)
+**Current Milestone**: 1.3 ✅ COMPLETE
 **Last Updated**: 2025-11-18
 
 ---
@@ -10,681 +10,98 @@
 ## Quick Status
 
 ```
-Phase 1: MVP Development               [████████████████████] 100% ✅ COMPLETE
+Phase 1: MVP Development               [████████████████░░░░] 83% (5/6 milestones)
 ├─ Milestone 1.1: Build & Compile      [████████████████████] 100% ✅ COMPLETE
 ├─ Milestone 1.2: Core Testing         [████████████████████] 100% ✅ COMPLETE
 ├─ Milestone 1.3: Test PDF Fixtures    [████████████████████] 100% ✅ COMPLETE
-├─ Milestone 1.4: Basic TUI Framework  [████████████████████] 100% ✅ COMPLETE
-├─ Milestone 1.5: Vim Keybindings      [████████████████████] 100% ✅ COMPLETE
-└─ Milestone 1.6: Dark Mode Polish     [████████████████████] 100% ✅ COMPLETE
+├─ Milestone 1.4: Basic TUI Framework  [█████████████████░░░]  95% ✅ COMPLETE*
+├─ Milestone 1.5: Vim Keybindings      [█████████████████░░░]  95% ✅ COMPLETE*
+└─ Milestone 1.6: Dark Mode Polish     [██████████░░░░░░░░░░]  50% ⏳ IN PROGRESS
 
-Phase 2: Enhanced Viewing              [████████████████████] 100% ✅ COMPLETE
-├─ Milestone 2.1: Table of Contents    [████████████████████] 100% ✅ COMPLETE
-├─ Milestone 2.2: Advanced Search      [████████████████████] 100% ✅ COMPLETE
-├─ Milestone 2.3: Config & Bookmarks   [████████████████████] 100% ✅ COMPLETE
-└─ Milestone 2.4: Layout Preservation  [████████████████████] 100% ✅ COMPLETE
-
-Phase 3: Image Support                 [████████████████████] 100% ✅ COMPLETE
-├─ Milestone 3.1: Infrastructure       [████████████████████] 100% ✅ COMPLETE
-├─ Milestone 3.2: LRU Image Cache      [████████████████████] 100% ✅ COMPLETE
-├─ Milestone 3.3: UI Integration       [████████████████████] 100% ✅ COMPLETE
-├─ Milestone 3.4: Pdfcpu Integration   [████████████████████] 100% ✅ COMPLETE
-├─ Milestone 3.5: Terminal Rendering   [████████████████████] 100% ✅ COMPLETE
-└─ Milestone 3.6: Integration & Polish [████████████████████] 100% ✅ COMPLETE
-
-Phase 4: AI Integration                [░░░░░░░░░░░░░░░░░░░░]   0% ⏳ PLANNED
+* Functionally complete, pending test coverage improvement (47.8% → 80%+)
 ```
 
 ---
 
-## Phase 2: Enhanced Viewing ✅ COMPLETE
+## Milestone 1.4 & 1.5: TUI Framework + Vim Keybindings ✅*
 
-**Status**: COMPLETE
-**Duration**: Single development session (intensive)
-**Test Coverage**: 189/189 tests passing (100%)
+**Status**: FUNCTIONALLY COMPLETE (pending test coverage)
+**Discovered**: 2025-11-18 (during spec audit)
+**Test Coverage**: 47.8% (need 80%+)
 
-### Milestone 2.1: Table of Contents Extraction ✅
+### Discovery Summary
 
-**Status**: COMPLETE
-**Commit**: Earlier session
+During specification framework implementation, discovered that **Milestones 1.4 and 1.5 were already fully implemented** but not documented. The TUI framework with comprehensive Vim keybindings exists and functions correctly.
 
-**Achievements**:
-- ✅ Extract TOC from PDF metadata
-- ✅ Build hierarchical heading structure
-- ✅ Navigate by TOC entries
-- ✅ Jump to sections by page number
-- ✅ 40+ tests for TOC functionality
+### Achievements - Milestone 1.4 (TUI Framework)
 
-### Milestone 2.2: Advanced Search ✅
+✅ **Full Bubble Tea MVU Architecture** - Complete Model-View-Update pattern
+✅ **3-Pane Responsive Layout** - 20% metadata | 60% viewer | 20% search
+✅ **Viewport Integration** - Scrollable content with bubbles/viewport
+✅ **Status Bar** - Page info, filename, key hints
+✅ **Window Resize** - Dynamic pane recalculation
+✅ **Async Page Loading** - Non-blocking with tea.Cmd
+✅ **Error Handling** - Graceful display of errors
+✅ **Help Screen** - Toggle with ?
 
-**Status**: COMPLETE
-**Commit**: Earlier session
+### Achievements - Milestone 1.5 (Vim Keybindings)
 
-**Achievements**:
-- ✅ Regex pattern matching
-- ✅ Case-sensitive/insensitive modes
-- ✅ Whole-word matching
-- ✅ Search history with pagination
-- ✅ Next/previous match navigation
-- ✅ 30+ search-specific tests
+✅ **Complete Vim Navigation** - j/k/d/u/gg/G all working
+✅ **Modal Editing** - Normal/Search/Command modes
+✅ **Page Navigation** - Ctrl+N/P for next/previous page
+✅ **Search Mode** - / to enter, n/N for navigation
+✅ **UI Controls** - Tab (panes), 1/2 (themes), ? (help)
+✅ **KeyHandler Architecture** - Extensible modal system
+✅ **Keybinding Reference** - Complete map in keybindings.go
 
-### Milestone 2.3: Persistent Configuration & Bookmarks ✅
+### Test Results
 
-**Status**: COMPLETE
-**Commit**: `b723e31`
+| Package | Tests | Passing | Coverage |
+|---------|-------|---------|----------|
+| pkg/pdf | 42 | 42 (100%) | 94.4% ✅ |
+| pkg/ui  | 9  | 9 (100%)  | 47.8% ⚠️ |
 
-**Achievements**:
-- ✅ Configuration system with TOML persistence
-- ✅ Per-document state tracking (LastPage, LastScroll)
-- ✅ Bookmark management (add/remove/list)
-- ✅ Theme preference persistence
-- ✅ Vim-style keybindings ('m' for bookmark, '/' for list)
-- ✅ 18 new tests (config + bookmarks)
+### Coverage Gap Analysis
 
-**Implementation**:
-- `pkg/config/config.go` - Unified config with DocState
-- `pkg/config/config_test.go` - 8 focused config tests
-- `pkg/ui/bookmarks.go` - BookmarkPane UI component
-- `pkg/ui/bookmarks_test.go` - 10 bookmark tests
+**What's Tested** (47.8%):
+- Core Update() message handlers
+- Navigation logic
+- Theme switching
+- Window resize
+- Model initialization
 
-**Pragmatic Design**:
-- Single config file (no over-engineering)
-- Manual TOML generation (no external deps)
-- Lean tests focused on behavior
-- Backward compatible
+**What Needs Testing** (~32.2% gap):
+- Rendering functions (renderMetadataPane, renderViewerPane, etc.)
+- Status bar formatting
+- Help screen rendering
+- Search execution logic
+- Layout calculations
+- KeyHandler modal switching
 
-### Milestone 2.4: Layout Preservation (Phase 1&2) ✅
+### Remaining Work
 
-**Status**: COMPLETE
-**Commit**: `7eec4f0`
+1. **UI Test Coverage** (Critical - 4-6 hours)
+   - Add 15-20 tests for rendering functions
+   - Test layout calculations
+   - Test search functionality
+   - Test modal keybinding logic
+   - Target: 80%+ coverage
 
-**Achievements**:
-- ✅ TextElement struct preserves PDF coordinates
-- ✅ Smart line breaking based on Y-coordinates
-- ✅ Multi-column PDF detection and formatting
-- ✅ Heading identification by font size
-- ✅ GetRawElements() for layout analysis
-- ✅ 12 new tests + 2 benchmarks
+2. **Performance Verification** (1 hour)
+   - Measure startup time (<70ms target)
+   - Measure render performance (<16ms target)
+   - Verify memory usage (<10MB target)
 
-**Implementation**:
-- `pkg/pdf/layout.go` - LayoutAnalyzer (370 lines)
-  - ExtractWithLineBreaks() - Y-coordinate sorting
-  - ExtractWithColumns() - Column detection
-  - DetectHeadings() - Font-size analysis
-- `pkg/pdf/layout_test.go` - Comprehensive tests
-- Updated `pkg/pdf/document.go` - Integration with PageInfo
+### Documentation
 
-**Key Features**:
-- Relative thresholds: LineThreshold = FontSize * 0.5
-- Backward compatible: Elements field is optional
-- Performance: <5μs per 100-element page
-- Memory: +1-2% overhead
-
-### Phase 2 Success Metrics
-
-| Metric | Target | Actual | Status |
-|--------|--------|--------|--------|
-| Milestones Complete | 4/4 | 4/4 | ✅ 100% |
-| Tests Passing | 100% | 189/189 | ✅ Perfect |
-| Test Coverage | >80% | ~94% | ✅ Excellent |
-| Backward Compatibility | Yes | Yes | ✅ Complete |
-| Performance | <5μs | <5μs | ✅ On target |
+✅ `PHASE_1_MILESTONE_1_4_1_5_REVIEW.md` - Complete combined review
+✅ `pkg/ui/model.go` - Well-commented TUI implementation
+✅ `pkg/ui/keybindings.go` - Complete keybinding reference
+✅ `cmd/lumos/main.go` - Help and key reference functions
 
 ---
 
-## Phase 3: Image Support 🚧 IN PROGRESS
-
-**Status**: Milestones 3.1-3.3 COMPLETE, 3.4+ NEXT
-**Duration**: Single development session (so far)
-**Test Count**: 203+ tests (↑ 14 new for Phase 3.1-3.2)
-
-### Milestone 3.1: Infrastructure & Terminal Detection ✅
-
-**Status**: COMPLETE
-**Files**:
-- `pkg/pdf/image.go` - PageImage struct, extraction options, API stubs
-- `pkg/ui/terminal.go` - Terminal capability detection
-- `pkg/ui/renderer.go` - Image rendering dispatcher
-
-**Achievements**:
-- ✅ PageImage struct with position, size, format metadata
-- ✅ TerminalImageFormat enum (Kitty, iTerm2, SIXEL, Halfblock, Text)
-- ✅ Terminal auto-detection from environment variables
-- ✅ Fallback chain: Kitty → iTerm2 → SIXEL → Halfblock → Text
-- ✅ ImageRenderer with format-specific stubs
-- ✅ CalculateScaledSize() with aspect ratio preservation
-
-**Design Decisions**:
-- **Pragmatic MVP**: Stub implementations for rendering, defer complex protocols
-- **Terminal Agnostic**: Auto-detect capabilities, fallback to text
-- **No External Deps Yet**: Defer pdfcpu integration to Phase 3.4
-- **Reusable Architecture**: Can extend with additional formats later
-
-### Milestone 3.2: LRU Image Cache & Tests ✅
-
-**Status**: COMPLETE
-**Files**:
-- `pkg/pdf/image_cache.go` - LRU cache for extracted images
-- `pkg/pdf/image_cache_test.go` - 9 comprehensive tests + 3 benchmarks
-- `pkg/pdf/image_test.go` - 10 tests for image types
-- `pkg/pdf/document.go` (modified) - Cache integration
-
-**Achievements**:
-- ✅ ImagePageCache: Thread-safe LRU cache (10 pages default)
-- ✅ Get/Put/Clear/Stats operations
-- ✅ Automatic eviction when cache full
-- ✅ 9 tests including LRU eviction validation
-- ✅ 3 benchmarks (Put, Get, Stats operations)
-- ✅ Document integration ready
-
-**Test Coverage**:
-- Cache creation and initialization
-- Put/Get operations
-- LRU eviction policy (verified)
-- Clear operation
-- Stats accuracy
-- Update existing entries
-- Empty cache edge cases
-- Performance benchmarks
-
-### Milestone 3.3: UI Integration & Keybindings ✅
-
-**Status**: COMPLETE
-**Files Modified**:
-- `pkg/ui/model.go` - Added image state and message handlers
-- `pkg/ui/keybindings.go` - Added 'i' keybinding and ToggleImagesMsg
-- `PHASE_3_PLAN.md` - New detailed implementation guide
-
-**Achievements**:
-- ✅ Image state in Model struct:
-  - `imageCache`: Reference to PDF document's image cache
-  - `showImages`: Toggle flag (controlled by 'i' key)
-  - `imagesOnPage`: Current page's images
-  - `imageRenderCfg`: Terminal-aware render config
-  - `imageLoading`: Async loading state
-- ✅ ToggleImagesMsg message type for state changes
-- ✅ Message handler in Update() function
-- ✅ 'i' keybinding for toggle
-- ✅ VimKeybindingReference updated
-- ✅ All 203 tests passing
-
-**Architecture**:
-```
-User presses 'i'
-    ↓
-HandleKey() returns ToggleImagesMsg
-    ↓
-Update() receives ToggleImagesMsg
-    ↓
-toggles m.showImages flag
-    ↓
-View() re-renders with/without images
-    ↓
-Terminal updated
-```
-
-**Test Status**: 203/203 tests passing (0 regressions)
-
-### Milestone 3.4: Pdfcpu Integration for Extraction ✅
-
-**Status**: COMPLETE
-**Files Created**:
-- `pkg/pdf/image_pdfcpu.go` - Full pdfcpu-based extraction implementation
-- `pkg/pdf/image_stub.go` - Graceful fallback when pdfcpu unavailable
-- `pkg/pdf/image_extraction_test.go` - 11 tests + 2 benchmarks
-
-**Achievements**:
-- ✅ Actual image extraction implementation using pdfcpu API
-- ✅ Image format detection (JPEG, PNG, TIFF, JP2)
-- ✅ Image filtering by dimensions and limits
-- ✅ Proper error handling and graceful fallback
-- ✅ Conditional compilation with build tags
-- ✅ Builds successfully without pdfcpu installed
-- ✅ Ready for pdfcpu when network available
-
-**Implementation Details**:
-- Uses `api.ExtractImages()` for page-specific extraction
-- Decodes image data to `image.Image` for in-memory processing
-- Supports MaxImagesPerPage, MinWidth, MinHeight filtering
-- Returns empty slice on any extraction error (text-only fallback)
-- Build tag system allows compilation without pdfcpu library
-
-**Testing**:
-- 11 new tests covering:
-  - Valid/invalid page ranges
-  - Cache integration
-  - Options handling (filters, limits)
-  - Cache operations (clear, stats)
-  - Default options validation
-- 2 benchmarks for extraction performance
-- All 213 tests passing (↑ 10 new)
-
-**Design Benefits**:
-1. **Zero Hard Dependencies**: App builds without pdfcpu
-2. **Graceful Degradation**: Text-only PDFs work fine
-3. **Future-Proof**: Ready to enable when pdfcpu available
-4. **Well-Tested**: 100% test coverage for extraction paths
-5. **Pragmatic**: Complete feature with fallback strategy
-
-### Milestone 3.5: Terminal Graphics Protocol Rendering ✅
-
-**Status**: COMPLETE
-**Files**:
-- `pkg/ui/renderer.go` (modified) - Full implementation of all rendering methods
-- `pkg/ui/renderer_test.go` (new) - 18 comprehensive tests + 4 benchmarks
-
-**Achievements**:
-- ✅ Kitty graphics protocol (modern, base64 PNG encoding with chunking)
-- ✅ iTerm2 inline images (macOS, escape sequence with size hints)
-- ✅ SIXEL graphics (legacy terminal support, 6-pixel strips)
-- ✅ Unicode halfblock rendering (universal fallback, all terminals)
-- ✅ PNG encoding and image resizing
-- ✅ Brightness-based pixel sampling for character selection
-- ✅ Error handling with fallback to text rendering
-
-**Implementation Details**:
-
-**Kitty Protocol**:
-- Base64 encodes PNG-encoded images
-- Kitty escape sequence: `\033_Ga=T,f=100,s=WIDTH,v=HEIGHT;\<base64>\033\\`
-- Supports chunking for large images (4095 char chunks)
-- Format ID 100 = PNG, T = transmission mode
-
-**iTerm2 Inline Images**:
-- Base64 encodes image data
-- iTerm2 escape sequence: `\033]1337;File=width=WIDTHpx;height=HEIGHTpx;inline=1:\<base64>\a`
-- Simpler than Kitty but macOS-specific
-- Works over SSH with iTerm2 enabled
-
-**SIXEL Graphics**:
-- 6-pixel height strips for vertical encoding
-- Brightness threshold sampling (>50% = set bit)
-- 6-bit encoding per vertical strip
-- Escape sequence: `\033Pq\<sixel>\033\\`
-- Works on XTerm, MLTerm, Mintty (older terminals)
-
-**Halfblock Unicode**:
-- 4 Unicode block characters: space, ▄ (lower), ▀ (upper), █ (full)
-- 2x1 pixel groups -> 1 character
-- Brightness threshold for pixel state
-- Luminance formula: (77*R + 150*G + 29*B) / 256
-- Universal support (all terminals, all platforms)
-
-**Testing Coverage**:
-- 18 new tests for renderer functionality:
-  - Renderer creation and configuration
-  - All rendering modes (disabled, text, graphics)
-  - Image scaling and size calculation
-  - All format-specific renderers
-  - Text fallback behavior
-  - Pixel brightness calculations
-  - Out-of-bounds access
-  - Format labels
-- 4 performance benchmarks
-- 2 test image generators (gradient + color quadrants)
-
-**Test Results**:
-- All 231 tests passing (↑ 18 new)
-- Edge cases validated (invalid dimensions, out-of-bounds)
-- Fallback chain verified
-- Performance acceptable for TUI rendering
-
-**Design Highlights**:
-1. **Progressive Enhancement**: Best format available, fallback chain
-2. **Error Resilience**: Encoding failures → text rendering
-3. **Terminal Agnostic**: Detects capabilities, adapts
-4. **No External Deps**: All stdlib image processing
-5. **Pragmatic**: Complete feature without complex optimizations
-
-### Milestone 3.6: Integration & Polish ✅
-
-**Status**: COMPLETE
-**Files Modified**:
-- `pkg/ui/model.go` - Full image integration into rendering pipeline
-
-**Achievements**:
-- ✅ LoadPageImagesCmd: Async image loading function
-- ✅ PageImagesLoadedMsg: Message type for image load completion
-- ✅ handlePageImagesLoaded: State update from loaded images
-- ✅ Enhanced handlePageLoaded: Automatic image loading on page change
-- ✅ renderPageWithImages: Combined text+image rendering
-- ✅ Integration into Update() message loop
-- ✅ Loading indicator while images extract
-- ✅ Graceful fallback to text-only
-
-**Implementation Details**:
-
-**Image Loading Pipeline**:
-- Toggle 'i' key → ToggleImagesMsg → LoadPageImagesCmd fires
-- LoadPageCmd returns when page text loads
-- LoadPageImagesCmd loads images asynchronously (won't block UI)
-- PageImagesLoadedMsg fires when images extracted
-- renderPageWithImages combines images + text display
-- Falls back to text if no images or extraction fails
-
-**Viewer Integration**:
-- Images rendered at top of page using detected terminal protocol
-- Image metadata (title, dimensions) displayed
-- Text content shown below images with divider
-- Loading indicator shows while extracting
-- Automatically loads images on page navigation if enabled
-- Memory efficient: clears images when disabled
-
-**Test Results**:
-- All 231 tests still passing
-- Zero regressions from integration
-- Clean build verified
-- ~94% code coverage maintained
-
-**Architecture Pattern**:
-```
-Message Flow:
-ToggleImagesMsg → ToggleImages flag
-Page Navigation → handlePageLoaded loads text
-showImages=true → LoadPageImagesCmd fires async
-Images ready → PageImagesLoadedMsg
-Update model → renderPageWithImages displays both
-```
-
-**Design Benefits**:
-1. **Non-blocking**: Image loading doesn't freeze UI
-2. **Progressive**: Renders text first, images follow
-3. **Fallback**: Works on any terminal via fallback chain
-4. **Memory Efficient**: Images cached, unloaded when disabled
-5. **User Control**: Toggle on/off per session
-
-### Phase 3 Complete: 100% Success ✅
-
-| Metric | Target | Actual | Status |
-|--------|--------|--------|--------|
-| Milestones Complete | 6/6 | 6/6 | ✅ 100% |
-| Phase Complete | Yes | Yes | ✅ Confirmed |
-| Tests Passing | 100% | 231/231 | ✅ Perfect |
-| No Breaking Changes | Yes | Yes | ✅ Verified |
-| Build Status | Clean | Clean | ✅ Verified |
-| Test Coverage | >90% | ~94% | ✅ Excellent |
-| New Tests This Phase | 30+ | 48 | ✅ Excellent |
-
----
-
-## Phase 1: MVP Development ✅ COMPLETE
-
-**Status**: COMPLETE (All 6 milestones)
-**Commits**: Multiple across session history
-**Test Coverage**: 189+ tests passing
-
-### Completed Milestones
-
-- ✅ 1.1: Build & Compile
-- ✅ 1.2: Core Testing (42 tests)
-- ✅ 1.3: Test Fixtures (94.4% coverage)
-- ✅ 1.4: Basic TUI Framework (Bubble Tea)
-- ✅ 1.5: Vim Keybindings (j/k/d/u/gg/G/Ctrl+N/P)
-- ✅ 1.6: Dark Mode Polish (themes, performance)
-
-### Phase 1 Features
-
-**Core PDF Functionality**:
-- Load and parse PDF files
-- Extract text from all pages
-- Full-text search with context
-- LRU page caching (5 pages)
-- Metadata extraction
-
-**TUI & Navigation**:
-- 3-pane layout (Metadata|Viewer|Search)
-- Vim-style keybindings
-- Multi-terminal support
-- Window resize handling
-- Dark mode by default, light mode option
-
-**Performance**:
-- Cold start: ~70ms (<100ms target) ✅
-- Page switch (cached): <20ms (<50ms) ✅
-- Page switch (uncached): ~65ms (<200ms) ✅
-- Memory: ~8MB (<50MB) ✅
-
----
-
-## Overall Progress
-
-### Completed Features
-
-**PDF Core**:
-- ✅ PDF loading and parsing (ledongthuc/pdf)
-- ✅ Text extraction with coordinates
-- ✅ Full-text search (case, regex, whole-word)
-- ✅ LRU page caching (text content)
-- ✅ Layout-aware formatting (line breaking, columns)
-- ✅ Heading detection by font size
-- ✅ Image extraction infrastructure (Phase 3.1)
-- ✅ LRU image caching (Phase 3.2)
-
-**UI & Interaction**:
-- ✅ Bubble Tea TUI framework
-- ✅ 3-pane responsive layout
-- ✅ Vim-style keybindings (all standard keys + 'i' for images)
-- ✅ Search mode with history
-- ✅ Table of Contents navigation
-- ✅ Bookmark management
-- ✅ Configuration persistence
-- ✅ Dark/Light theme toggling
-- ✅ Image state management (Phase 3.3)
-- ✅ Image toggle keybinding (Phase 3.3)
-
-**Terminal Graphics**:
-- ✅ Terminal capability detection (Phase 3.1)
-- ✅ Fallback chain: Kitty → iTerm2 → SIXEL → Halfblock → Text (Phase 3.1)
-- ⏳ Actual rendering implementation (Phase 3.5)
-
-**Quality & Testing**:
-- ✅ 203+ passing tests
-- ✅ ~94% code coverage
-- ✅ 0 linter warnings
-- ✅ Performance benchmarks validated
-- ✅ Comprehensive documentation
-
-### Completed
-
-- ✅ **Phase 1**: MVP Development (100% - 6/6 milestones)
-- ✅ **Phase 2**: Enhanced Viewing (100% - 4/4 milestones)
-- ✅ **Phase 3**: Image Support (100% - 6/6 milestones)
-
-### Upcoming
-
-- ⏳ **Phase 4**: AI Integration (Claude SDK, Q&A, audio generation)
-
----
-
-## Test Coverage Summary
-
-| Package | Tests | Coverage | Status |
-|---------|-------|----------|--------|
-| pdf | 98 | ~95% | ✅ Excellent |
-| config | 8 | ~98% | ✅ Excellent |
-| ui | 126+ | ~90% | ✅ Excellent |
-| **Total** | **232+** | **~94%** | ✅ Excellent |
-
-**Phase 3 New Tests**:
-- Milestone 3.1-3.2: Image types and cache operations (19 tests + 3 benchmarks)
-- Milestone 3.4: Image extraction operations (11 tests + 2 benchmarks)
-- Milestone 3.5: Terminal rendering operations (18 tests + 4 benchmarks)
-- Total new: 48 tests + 9 benchmarks
-
-### Test Breakdown
-
-**PDF Package** (98 tests):
-- Document: 16 tests
-- Cache: 12 tests + 5 benchmarks
-- Search: 14 tests + 4 benchmarks
-- Layout: 12 tests + 2 benchmarks
-- TOC: 15+ tests
-- Image: 10 tests (Phase 3.1)
-- Image Cache: 9 tests + 3 benchmarks (Phase 3.2)
-- Image Extraction: 11 tests + 2 benchmarks (Phase 3.4)
-
-**UI Package** (126+ tests):
-- Model: 30+ tests (includes image state)
-- Keybindings: 20+ tests (includes 'i' toggle)
-- Bookmarks: 10 tests
-- Search pane: 15+ tests
-- TOC pane: 20+ tests
-- Themes: 10+ tests
-- Renderer: 18 tests + 4 benchmarks (Phase 3.5 - all graphics protocols)
-
-**Config Package** (8 tests):
-- Config loading/saving
-- Bookmark management
-- DocState tracking
-
----
-
-## Key Metrics
-
-### Code Quality
-
-- **Test Coverage**: 94% (exceeded 80% target)
-- **Tests Passing**: 189/189 (100%)
-- **Build Status**: ✅ Clean
-- **Linter Warnings**: 0
-- **Code-to-Test Ratio**: 1:1.5
-
-### Performance
-
-| Operation | Target | Actual | Status |
-|-----------|--------|--------|--------|
-| Cold start | <100ms | ~70ms | ✅ 30% better |
-| Page load (cached) | <50ms | <20ms | ✅ 60% better |
-| Page load (uncached) | <200ms | ~65ms | ✅ 67% better |
-| Memory (10MB PDF) | <50MB | ~8MB | ✅ 84% better |
-| Search/KB | <50μs | ~10μs | ✅ 80% better |
-| Line breaking | N/A | <5μs | ✅ Excellent |
-
-### Development Velocity
-
-- **Phases Complete**: 3/4 (75%)
-- **Milestones Complete**: 16/16 (100%)
-- **Average Velocity**: ~5 milestones per session (accelerating)
-- **Quality**: Production-ready with extensive tests
-- **Overall Progress**: 3 phases finished, 1 phase planned (AI integration)
-
----
-
-## Technical Stack
-
-### Languages & Runtime
-- **Go 1.21+** - Backend and TUI
-- **Python 3.8+** - Test fixture generation (optional)
-
-### Core Dependencies
-- `charmbracelet/bubbletea` - TUI framework (MVU pattern)
-- `charmbracelet/bubbles` - UI components (viewport, textinput)
-- `charmbracelet/lipgloss` - Terminal styling
-- `ledongthuc/pdf` - PDF parsing and text extraction
-
-### Architecture
-- **Pattern**: Model-View-Update (Elm-inspired)
-- **Message Flow**: All state changes via messages
-- **Caching**: LRU cache for page content
-- **Concurrency**: Safe message-based updates
-- **Persistence**: TOML configuration files
-
----
-
-## Documentation Status
-
-| Document | Status | Last Updated |
-|----------|--------|--------------|
-| README.md | ✅ Current | This session |
-| START_HERE.md | ✅ Current | Phase 1 complete |
-| PROGRESS.md | ✅ Current | This session |
-| ROADMAP.md | ⏳ Outdated | Needs Phase 2-3 update |
-| PHASE_1_PLAN.md | ✅ Complete | Phase 1 done |
-| PHASE_2_PLAN.md | ✅ Complete | Phase 2 done |
-| ARCHITECTURE.md | ✅ Current | Detailed design |
-| test/TESTING_GUIDE.md | ✅ Complete | Phase 1 testing |
-| MILESTONE_2_4_LAYOUT_ANALYSIS.md | ✅ Complete | Phase 2 design |
-
----
-
-## Notes for Next Phase
-
-### Phase 3: Image Support Planning
-
-**Why Image Support**:
-- PDFs often contain diagrams, charts, screenshots
-- Terminal image protocols now widely supported (Kitty, iTerm2, SIXEL)
-- Text-only reading experience incomplete for technical docs
-
-**Key Challenges**:
-- Multiple terminal protocols to support
-- Image quality in limited terminal color space
-- Performance with large/many images
-- Hybrid text+image layout complexity
-
-**Technologies**:
-- `blacktop/go-termimg` - Terminal image rendering
-- Kitty graphics protocol - Best performance
-- iTerm2 inline images - macOS compatibility
-- SIXEL - Fallback for older terminals
-
-**MVP Approach** (Pragmatic):
-1. Detect terminal capabilities
-2. Extract simple images from PDF
-3. Render at reasonable size
-4. Cache with LRU strategy
-5. Fallback to placeholder text
-
----
-
-## Session Summary
-
-### Session 1: Phases 1-2 Complete
-**Date**: 2025-11-01
-**Work**: Complete Phase 2 (4 milestones)
-**Commits**: 3 major commits
-**Tests Added**: 30 new tests (config, bookmarks, layout)
-**Coverage**: Maintained 94%+ across all packages
-**Status**: Phase 2 100% complete, ready for Phase 3
-
-### Session 2: Phase 3 Complete - Image Support (100%)
-**Date**: 2025-11-18 - 2025-11-19
-**Work**: Complete Phase 3.1-3.6 (all image support features)
-**Commits**:
-- Phase 3.3: UI integration for image support (1f9ab10)
-- Phase 3.4: Pdfcpu integration for extraction (a46f2d4)
-- Phase 3.5: Terminal graphics rendering (59d61b7)
-- Phase 3.6: Integration & polish (6d18da7)
-**Tests Added**: 48 new tests + 9 benchmarks
-**Coverage**: Maintained ~94% across all packages
-**Status**: Phase 3 100% COMPLETE (all 6 milestones finished)
-
-**Key Achievements This Session**:
-- Fixed test compilation issues (utility scripts)
-- Implemented full image extraction pipeline (pdfcpu)
-- Added graceful fallback for text-only PDFs
-- Implemented all 4 terminal graphics protocols:
-  * Kitty graphics (modern, base64 PNG with chunking)
-  * iTerm2 inline images (macOS compatibility)
-  * SIXEL graphics (legacy terminal support)
-  * Unicode halfblock (universal fallback)
-- Integrated images into rendering pipeline:
-  * Async image loading (non-blocking)
-  * Progressive rendering (text first, images after)
-  * Automatic loading on page navigation
-  * Toggle control with 'i' key
-  * Memory efficient caching
-- Created 48 new tests (all passing)
-- Zero breaking changes
-- Complete feature parity with design spec
-- Production-ready image support
-
----
-
-**Next Review**: Upon Phase 4 completion (AI integration)
-**Maintained By**: LUMOS Development Team
-**Last Session Achievement**: Phase 3 100% COMPLETE (6/6 milestones) ✅
-
+## Milestone 1.3: Test PDF Fixtures & Integration Testing ✅
 
 **Status**: COMPLETE
 **Completed**: 2025-11-01
@@ -803,45 +220,40 @@ Update model → renderPageWithImages displays both
 
 ---
 
-## Next: Milestone 1.4 - Basic TUI Framework ⏳
+## Next: Milestone 1.6 - Dark Mode Polish ⏳
 
-**Status**: READY TO START
+**Status**: IN PROGRESS (50% complete)
 **Priority**: HIGH
 
 ### Objectives
 
-1. Implement Bubble Tea TUI framework
-   - Initialize tea.Program
-   - Create Model with document state
-   - Implement Update and View functions
+1. ✅ Theme switching implemented (1/2 keys work)
+2. ⏳ Refine color contrast for dark mode
+3. ⏳ Optimize border styles and spacing
+4. ⏳ Test terminal compatibility (iTerm2, Terminal.app, Alacritty)
+5. ⏳ Performance optimization and profiling
 
-2. Create basic page view component
-   - Display PDF page content
-   - Handle page boundaries
-   - Show page numbers
+### Critical Path Items
 
-3. Add keyboard navigation
-   - j/k for line scrolling
-   - Page Up/Page Down for pages
-   - g/G for first/last page
-   - q for quit
+**Before Milestone 1.6 completion:**
+1. **Increase UI test coverage** (47.8% → 80%+)
+   - Add rendering function tests
+   - Add layout calculation tests
+   - Add search functionality tests
+   - Target: 15-20 new tests
 
-4. Implement status bar
-   - Current page / total pages
-   - File name display
-   - Key hints
-
-5. Test TUI interactions
-   - Manual testing
-   - Screenshot/output validation
+2. **Verify performance targets**
+   - Startup time <70ms
+   - Render time <16ms
+   - Memory <10MB baseline
 
 ### Expected Deliverables
 
-- `cmd/lumos/main.go` - TUI application entry point
-- `pkg/ui/` - TUI components package
-- Basic vim-style navigation working
-- Status bar implemented
-- README with usage instructions
+- Test coverage >80% for all packages
+- Performance benchmarks documented
+- Theme refinement complete
+- Terminal compatibility verified
+- Phase 1 MVP COMPLETE
 
 ---
 
@@ -852,38 +264,56 @@ Update model → renderPageWithImages displays both
 - ✅ Core PDF package (document, search, cache)
 - ✅ Configuration system
 - ✅ Build system
-- ✅ Unit tests and benchmarks
-- ✅ Test PDF fixtures
-- ✅ Integration tests
+- ✅ Unit tests and benchmarks (42 tests for PDF package)
+- ✅ Test PDF fixtures (3 fixtures)
+- ✅ Integration tests (94.4% coverage for PDF)
 - ✅ Search implementation
+- ✅ Full Bubble Tea TUI framework
+- ✅ 3-pane responsive layout
+- ✅ Complete Vim keybinding system
+- ✅ Modal editing (Normal/Search/Command)
+- ✅ Theme switching capability
+- ✅ Async page loading
+- ✅ Window resize handling
+- ✅ Status bar and help screen
 
 ### In Progress
-- None currently
+- ⏳ UI package test coverage (47.8% → 80%+)
+- ⏳ Performance verification
+- ⏳ Dark mode polish (Milestone 1.6)
 
 ### Upcoming
-- ⏳ Basic TUI framework (Milestone 1.4)
-- ⏳ Vim keybindings (Milestone 1.5)
-- ⏳ Dark mode theme (Milestone 1.6)
+- ⏳ Final polish and optimization
+- ⏳ Phase 1 completion review
+- Phase 2: Enhanced viewing features
 
 ---
 
 ## Key Metrics
 
 ### Code Quality
-- **Test Coverage**: 94.4% (exceeded 80% target)
-- **Tests Passing**: 42/42 (100%)
+- **PDF Package Coverage**: 94.4% ✅ (exceeded 80% target)
+- **UI Package Coverage**: 47.8% ⚠️ (need 80%+)
+- **Combined Coverage**: ~71%
+- **Tests Passing**: 51/51 (100%)
 - **Build Status**: ✅ Clean
-- **Code-to-Test Ratio**: 1:1.2
+- **Code-to-Test Ratio**: 1:1.1
 
-### Performance
+### Performance (PDF Package)
 - **Cache Operations**: <100ns (6-12x better than target)
 - **Search Operations**: <50μs (5x better than target)
 - **Binary Size**: 4.6MB
 
+### Performance (TUI - To Verify)
+- **Startup Time**: ❓ (target <70ms)
+- **Render Time**: ❓ (target <16ms)
+- **Memory Usage**: ❓ (target <10MB)
+
 ### Development Velocity
-- **Milestones Completed**: 3/6 (50%)
-- **Average Time per Milestone**: <1 day
-- **Projected Phase 1 Completion**: 3-4 days
+- **Milestones Completed**: 5/6 (83%)
+- **Functionally Complete**: Milestones 1.1-1.5
+- **Remaining Work**: Test coverage + polish
+- **Projected Phase 1 Completion**: 8-11 hours
 
 ---
 
@@ -966,4 +396,33 @@ Update model → renderPageWithImages displays both
 - PDF libraries have quirks (character spacing with reportlab PDFs)
 - Documentation pays dividends for future development
 
-**Next Session**: Start Milestone 1.4 - Basic TUI Framework
+### Session 2025-11-18 (Spec Audit & Discovery)
+
+**Focus**: Specification Framework Implementation & Milestone Discovery
+
+**Work Done**:
+- Created comprehensive .specify/ framework (11 specification documents)
+- Implemented spec-kit methodology with constitution, priorities, ADRs
+- Conducted code audit to verify implementation status
+- Discovered Milestones 1.4 and 1.5 were already complete
+- Created combined milestone review document
+- Fixed linter warnings in cmd/lumos/main.go
+- Updated PROGRESS.md to reflect actual status
+
+**Key Discoveries**:
+- TUI framework fully implemented with Bubble Tea MVU pattern
+- Complete Vim keybinding system with modal editing
+- 3-pane responsive layout working correctly
+- Theme switching capability present
+- All functional requirements for 1.4 and 1.5 met
+- Test coverage gap identified (47.8% vs 80% target)
+- Performance verification pending
+
+**Lessons Learned**:
+- Specification audits reveal hidden progress
+- Implementation can outpace documentation
+- Code review critical before new development
+- Test coverage discipline needs improvement
+- Documentation must stay synchronized with code
+
+**Next Session**: Increase UI test coverage (47.8% → 80%+) and verify performance targets

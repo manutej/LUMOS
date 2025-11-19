@@ -2,14 +2,72 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+---
+
+## ⚠️ IMPORTANT: Always Check These First
+
+**Before starting ANY work session, Claude Code MUST:**
+
+1. **Read `NEXT_STEPS.md`** - Current priorities and actionable tasks
+   - Shows what to work on RIGHT NOW
+   - Provides session-by-session plan
+   - Lists blockers and estimated times
+   - **Update this file at end of each session**
+
+2. **Review `PROGRESS.md`** - Detailed project history and status
+   - Shows milestone completion status
+   - Contains session notes and lessons learned
+   - Tracks test coverage and metrics
+   - **Update this file when milestones change**
+
+3. **Check `.specify/HANDOFF.md`** - Quick 15-minute orientation (if unfamiliar)
+
+**Maintenance Protocol:**
+
+- **After EVERY work session**: Update `NEXT_STEPS.md` with:
+  - Completed tasks (mark with [x])
+  - New tasks discovered
+  - Updated time estimates
+  - Current blockers
+  - Next session focus
+
+- **When milestones complete**: Update `PROGRESS.md` with:
+  - New completion percentages
+  - Session notes
+  - Lessons learned
+  - Updated metrics
+
+- **Before git commits**: Ensure both files reflect current reality
+
+**This protocol applies to:**
+- Claude Code CLI sessions
+- Claude Code web tool sessions
+- Any AI-assisted development
+- Human developer handoffs
+
+---
+
 ## Project Overview
 
 **LUMOS** is a dark mode PDF reader for developers built with Go and Bubble Tea TUI framework. It features vim-style keybindings, 3-pane layout, full-text search, and LRU page caching. A companion to LUMINA (markdown viewer).
 
-**Current Phase**: Phase 1 MVP (Milestone 1.4 - Basic TUI Framework)
-**Progress**: 50% complete (3/6 milestones done)
-**Test Coverage**: 94.4%
-**Status**: Production-ready core with TUI in development
+**Current Phase**: Phase 1 MVP (Milestone 1.6 - Dark Mode Polish)
+**Progress**: 83% complete (5/6 milestones done)
+**Test Coverage**: 94.4% (PDF), 47.8% (UI)
+**Status**: Functionally complete, pending test coverage improvement
+
+## Quick References
+
+- **Dependencies & Skills**: See `.claude/DEPENDENCIES.md` for:
+  - Complete dependency breakdown
+  - Relevant global skills (golang-backend-development, frontend-architecture, testing)
+  - Development workflow with dependencies
+  - Troubleshooting guide
+
+- **Specifications**: See `.specify/` for:
+  - Complete Phase 1 specification
+  - Milestone requirements and acceptance criteria
+  - Architecture decisions and testing strategy
 
 ## Common Commands
 
