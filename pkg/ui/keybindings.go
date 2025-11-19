@@ -62,14 +62,30 @@ func (kh *KeyHandler) handleNormalKey(msg tea.KeyMsg) tea.Cmd {
 	// Search
 	case "/":
 		return EnterSearch
+	case "ctrl+\\", "ctrl+/":
+		return ToggleSearchOptions
+	case "ctrl+h":
+		return ToggleSearchHistory
 
 	// UI
 	case "tab":
 		return CyclePane
+	case "shift+tab":
+		return CyclePanePrev
 	case "1":
 		return ToggleDarkMode
 	case "2":
 		return ToggleLightMode
+	case "3":
+		return CycleDarkTheme
+	case "ctrl+t":
+		return ToggleTOC
+	case "m":
+		return ToggleBookmark
+	case "'", "`":
+		return ToggleBookmarkList
+	case "i":
+		return ToggleImages
 	case "?":
 		return ToggleHelp
 
@@ -184,6 +200,10 @@ var (
 		return PaneChangeMsg{Direction: "next"}
 	}
 
+	CyclePanePrev = func() tea.Msg {
+		return PaneChangeMsg{Direction: "prev"}
+	}
+
 	ToggleDarkMode = func() tea.Msg {
 		return ThemeChangeMsg{Theme: "dark"}
 	}
@@ -192,8 +212,36 @@ var (
 		return ThemeChangeMsg{Theme: "light"}
 	}
 
+	CycleDarkTheme = func() tea.Msg {
+		return ThemeChangeMsg{Theme: "cycle"}
+	}
+
+	ToggleTOC = func() tea.Msg {
+		return ToggleTOCMsg{}
+	}
+
+	ToggleSearchOptions = func() tea.Msg {
+		return ToggleSearchOptionsMsg{}
+	}
+
+	ToggleSearchHistory = func() tea.Msg {
+		return ToggleSearchHistoryMsg{}
+	}
+
+	ToggleBookmark = func() tea.Msg {
+		return ToggleBookmarkMsg{}
+	}
+
+	ToggleBookmarkList = func() tea.Msg {
+		return ToggleBookmarkListMsg{}
+	}
+
 	ToggleHelp = func() tea.Msg {
 		return ToggleHelpMsg{}
+	}
+
+	ToggleImages = func() tea.Msg {
+		return ToggleImagesMsg{}
 	}
 
 	Exit = func() tea.Msg {
@@ -230,36 +278,70 @@ type PaneChangeMsg struct {
 }
 
 type ThemeChangeMsg struct {
-	Theme string // "dark" or "light"
+	Theme string // "dark", "light", or "cycle"
 }
 
 type ToggleHelpMsg struct{}
 
+type ToggleTOCMsg struct{}
+
+type ToggleSearchOptionsMsg struct{}
+
+type ToggleSearchHistoryMsg struct{}
+
+type ToggleBookmarkMsg struct{}
+
+type ToggleBookmarkListMsg struct{}
+
+type ToggleImagesMsg struct{}
+
 // VimKeybindingReference provides a reference of all keybindings
 var VimKeybindingReference = map[string]string{
-	// Navigation
+	// Navigation - Line scrolling
 	"j/↓":           "Scroll down one line",
 	"k/↑":           "Scroll up one line",
+	"h/←":           "Scroll left (wide PDFs)",
+	"l/→":           "Scroll right (wide PDFs)",
+
+	// Navigation - Page scrolling
 	"d":             "Scroll down half page",
 	"u":             "Scroll up half page",
-	"g":             "Go to top of document",
-	"G":             "Go to bottom of document",
+	"Ctrl+F":        "Scroll down full page",
+	"Ctrl+B":        "Scroll up full page",
+
+	// Navigation - Page jumps
+	"g":             "Go to first page",
+	"G":             "Go to last page",
 	"Ctrl+N":        "Go to next page",
 	"Ctrl+P":        "Go to previous page",
 
-	// Search
+	// Search & Copy
 	"/":             "Start search",
+	"Ctrl+\\":       "Toggle search options (regex, case, whole-word)",
+	"Ctrl+H":        "Toggle search history",
 	"n":             "Go to next match",
 	"N":             "Go to previous match",
+	"y":             "Copy current page text",
 	"Esc":           "Exit search",
 
-	// UI
-	"Tab":           "Cycle through panes",
-	"1":             "Switch to dark mode",
-	"2":             "Switch to light mode",
-	"?":             "Toggle help",
+	// Themes (Dark mode - core feature)
+	"1":             "Switch to dark theme",
+	"2":             "Switch to light theme",
+	"3":             "Cycle through dark themes",
+
+	// Bookmarks
+	"m":             "Add/toggle bookmark on current page",
+	"'/backtick":    "Show bookmark list",
+
+	// Images (Phase 3)
+	"i":             "Toggle images on/off",
+
+	// UI Controls
+	"Tab":           "Cycle through panes (forward)",
+	"Shift+Tab":     "Cycle through panes (backward)",
+	"Ctrl+T":        "Toggle table of contents",
+	"?":             "Toggle help screen",
 
 	// General
-	"q/Ctrl+C":      "Quit",
-	":":             "Enter command mode",
+	"q/Ctrl+C":      "Quit application",
 }

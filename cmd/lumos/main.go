@@ -118,7 +118,7 @@ KEYBOARD SHORTCUTS:
 
 For more information, see documentation at:
   /Users/manu/Documents/LUXOR/PROJECTS/LUMOS/README.md
-`)
+` + "\n")
 }
 
 func printKeys() {
@@ -173,5 +173,5 @@ TIPS
   • LRU caching keeps 5 pages in memory
   • Search is case-insensitive by default
   • Mark pages with vim marks (Phase 2+)
-`)
+` + "\n")
 }

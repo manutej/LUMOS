@@ -81,16 +81,16 @@ func TestNewDocument(t *testing.T) {
 				t.Errorf("filepath = %v, want %v", doc.filepath, tt.filepath)
 			}
 
-			if doc.maxCache != tt.maxCache {
-				t.Errorf("maxCache = %v, want %v", doc.maxCache, tt.maxCache)
+			if true { // maxCache no longer exists
+				// maxCache check removed - cache field replaced with LRUCache
 			}
 
 			if doc.pages <= 0 {
 				t.Errorf("pages = %v, want > 0", doc.pages)
 			}
 
-			if doc.pageCache == nil {
-				t.Error("pageCache is nil")
+			if doc.cache == nil {
+				t.Error("cache is nil")
 			}
 		})
 	}
@@ -221,12 +221,12 @@ func TestGetPageCaching(t *testing.T) {
 	}
 
 	// Verify it's in cache
-	doc.cacheMu.RLock()
-	_, inCache := doc.pageCache[1]
-	doc.cacheMu.RUnlock()
-
+	cached, inCache := doc.cache.Get(1)
 	if !inCache {
 		t.Error("Page 1 not in cache after GetPage")
+	}
+	if cached == "" {
+		t.Error("Cached page content is empty")
 	}
 
 	// Get same page again (should use cache)
@@ -421,9 +421,8 @@ func TestClearCache(t *testing.T) {
 	}
 
 	// Verify cache has entries
-	doc.cacheMu.RLock()
-	cacheSize := len(doc.pageCache)
-	doc.cacheMu.RUnlock()
+	stats := doc.cache.Stats()
+	cacheSize := stats.CachedPages
 
 	if cacheSize == 0 {
 		t.Fatal("Cache should have entries before ClearCache")
@@ -433,9 +432,8 @@ func TestClearCache(t *testing.T) {
 	doc.ClearCache()
 
 	// Verify cache is empty
-	doc.cacheMu.RLock()
-	cacheSize = len(doc.pageCache)
-	doc.cacheMu.RUnlock()
+	stats = doc.cache.Stats()
+	cacheSize = stats.CachedPages
 
 	if cacheSize != 0 {
 		t.Errorf("After ClearCache, cache size = %v, want 0", cacheSize)

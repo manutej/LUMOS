@@ -17,16 +17,45 @@ type Model struct {
 	cache    *pdf.LRUCache
 
 	// UI State
-	currentPage    int
-	theme          config.Theme
-	styles         config.Styles
-	keyHandler     *KeyHandler
-	showHelp       bool
-	searchActive   bool
-	searchQuery    string
-	searchResults  []pdf.SearchResult
-	currentMatch   int
-	activePaneIdx  int
+	currentPage       int
+	theme             config.Theme
+	styles            config.Styles
+	keyHandler        *KeyHandler
+	showHelp          bool
+	searchActive      bool
+	searchQuery       string
+	searchResults     []pdf.SearchResult
+	currentMatch      int
+	activePaneIdx     int
+	themeIndex        int // For cycling through themes
+	clipboard         string // Store copied text
+	showCopyFeedback  bool // Show copy confirmation
+
+	// Phase 2: Table of Contents
+	tocPane      *TOCPane
+	showTOC      bool
+	tocLoaded    bool
+
+	// Phase 2: Advanced Search
+	searchOptionsPane    *SearchOptionsPane
+	searchHistoryPane    *SearchHistoryPane
+	searchHistoryManager *pdf.SearchHistoryManager
+	advancedSearchResults []pdf.SearchResultAdvanced
+	showSearchOptions    bool
+	showSearchHistory    bool
+
+	// Phase 2.3: Bookmarks & Configuration
+	cfg           *config.Config
+	bookmarkPane  *BookmarkPane
+	showBookmarks bool
+	docPath       string // Full path to current document
+
+	// Phase 3: Image Support
+	imageCache     *pdf.ImagePageCache
+	showImages     bool              // Toggle with 'i' key
+	imagesOnPage   []pdf.PageImage   // Current page images
+	imageRenderCfg ImageRenderConfig // Terminal config
+	imageLoading   bool              // Loading state
 
 	// Viewport
 	viewport    viewport.Model
@@ -41,23 +70,59 @@ type Model struct {
 // NewModel creates a new application model
 func NewModel(document *pdf.Document) *Model {
 	cache := pdf.NewLRUCache(5)
-	theme := config.DarkTheme
+
+	// Load persistent configuration
+	cfg, _ := config.LoadConfig()
+	theme := config.GetTheme(cfg.UI.Theme)
 	styles := config.NewStyles(theme)
 
 	// Initialize viewport
 	vp := viewport.New(80, 20)
 	vp.Style = styles.Background
 
+	// Initialize TOC pane
+	tocPane := NewTOCPane(80, 20)
+
+	// Initialize advanced search components
+	searchHistoryManager := pdf.NewSearchHistoryManager(50)
+	searchOptionsPane := NewSearchOptionsPane(80, 10)
+	searchHistoryPane := NewSearchHistoryPane(80, 10, searchHistoryManager)
+
+	// Initialize bookmark pane
+	bookmarkPane := NewBookmarkPane(80, 10)
+
+	// Initialize image cache and renderer config
+	imageCache := pdf.NewImagePageCache(10)
+	imageRenderCfg := GetImageRenderConfig(80, 20)
+
 	m := &Model{
-		document:      document,
-		cache:         cache,
-		currentPage:   1,
-		theme:         theme,
-		styles:        styles,
-		keyHandler:    NewKeyHandler(),
-		showHelp:      false,
-		activePaneIdx: 1, // Start in viewer pane
-		viewport:      vp,
+		document:             document,
+		cache:                cache,
+		currentPage:          1,
+		theme:                theme,
+		styles:               styles,
+		keyHandler:           NewKeyHandler(),
+		showHelp:             false,
+		activePaneIdx:        1, // Start in viewer pane
+		viewport:             vp,
+		tocPane:              tocPane,
+		showTOC:              false,
+		tocLoaded:            false,
+		searchOptionsPane:    searchOptionsPane,
+		searchHistoryPane:    searchHistoryPane,
+		searchHistoryManager: searchHistoryManager,
+		advancedSearchResults: []pdf.SearchResultAdvanced{},
+		showSearchOptions:    false,
+		showSearchHistory:    false,
+		cfg:                  cfg,
+		bookmarkPane:         bookmarkPane,
+		showBookmarks:        false,
+		// Phase 3: Image Support
+		imageCache:     imageCache,
+		showImages:     true, // Enable images by default
+		imagesOnPage:   []pdf.PageImage{},
+		imageRenderCfg: imageRenderCfg,
+		imageLoading:   false,
 	}
 
 	return m
@@ -65,7 +130,37 @@ func NewModel(document *pdf.Document) *Model {
 
 // Init initializes the model
 func (m *Model) Init() tea.Cmd {
+	// Load the initial page
 	return LoadPageCmd(m.document, m.currentPage)
+}
+
+// LoadTOC loads the table of contents from the document
+func (m *Model) LoadTOC() tea.Cmd {
+	return func() tea.Msg {
+		if m.document != nil {
+			toc, err := m.document.ExtractTableOfContents()
+			if err == nil && toc != nil {
+				return TOCLoadedMsg{
+					TOC: toc,
+				}
+			}
+		}
+		return TOCLoadedMsg{
+			TOC: &pdf.TableOfContents{
+				Entries: []pdf.TOCEntry{},
+				Source:  "none",
+			},
+		}
+	}
+}
+
+// ToggleTOC toggles the table of contents display
+func (m *Model) ToggleTOC() {
+	if !m.tocLoaded {
+		// Load TOC on first toggle
+		m.LoadTOC()
+	}
+	m.showTOC = !m.showTOC
 }
 
 // Update handles messages
@@ -94,8 +189,69 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case ToggleHelpMsg:
 		m.showHelp = !m.showHelp
 
+	case ToggleTOCMsg:
+		if !m.tocLoaded {
+			cmd = m.LoadTOC()
+		} else {
+			m.showTOC = !m.showTOC
+		}
+
+	case TOCLoadedMsg:
+		m.tocPane.SetTableOfContents(msg.TOC)
+		m.tocLoaded = true
+		m.showTOC = true
+
 	case SearchMsg:
 		cmd = m.handleSearch(msg)
+
+	case ToggleSearchOptionsMsg:
+		m.showSearchOptions = !m.showSearchOptions
+		if m.showSearchOptions {
+			m.searchOptionsPane.Show()
+		} else {
+			m.searchOptionsPane.Hide()
+		}
+
+	case ToggleSearchHistoryMsg:
+		m.showSearchHistory = !m.showSearchHistory
+		if m.showSearchHistory {
+			m.searchHistoryPane.Show()
+		} else {
+			m.searchHistoryPane.Hide()
+		}
+
+	case ToggleBookmarkMsg:
+		// Add or remove bookmark on current page
+		if m.cfg.HasBookmark(m.docPath, m.currentPage) {
+			m.cfg.RemoveBookmark(m.docPath, m.currentPage)
+		} else {
+			m.cfg.AddBookmark(m.docPath, m.currentPage, "")
+		}
+		m.cfg.Save()
+		// Update bookmark pane with latest bookmarks
+		m.bookmarkPane.SetBookmarks(m.cfg.GetBookmarks(m.docPath))
+
+	case ToggleBookmarkListMsg:
+		m.showBookmarks = !m.showBookmarks
+		if m.showBookmarks {
+			m.bookmarkPane.SetBookmarks(m.cfg.GetBookmarks(m.docPath))
+			m.bookmarkPane.Show()
+		} else {
+			m.bookmarkPane.Hide()
+		}
+
+	case ToggleImagesMsg:
+		// Toggle image display on/off
+		m.showImages = !m.showImages
+		// Load images when toggled on
+		if m.showImages {
+			m.imageLoading = true
+			opts := pdf.DefaultImageExtractionOptions()
+			cmd = LoadPageImagesCmd(m.document, m.currentPage, opts)
+		}
+
+	case PageImagesLoadedMsg:
+		m.handlePageImagesLoaded(msg)
 	}
 
 	return m, cmd
@@ -161,12 +317,23 @@ func (m *Model) handleKeyPress(msg tea.KeyMsg) tea.Cmd {
 		case "2":
 			m.changeTheme("light")
 			return nil
+		case "3":
+			// Cycle through dark themes
+			m.cycleDarkTheme()
+			return nil
 		case "/":
 			m.keyHandler.Mode = KeyModeSearch
 			m.searchActive = true
 			return nil
+		case "y":
+			// Copy current page text to clipboard
+			m.copyCurrentPage()
+			return nil
 		case "tab":
 			m.activePaneIdx = (m.activePaneIdx + 1) % 3
+			return nil
+		case "shift+tab":
+			m.activePaneIdx = (m.activePaneIdx - 1 + 3) % 3
 			return nil
 		case "n":
 			if len(m.searchResults) > 0 {
@@ -199,6 +366,12 @@ func (m *Model) handleKeyPress(msg tea.KeyMsg) tea.Cmd {
 			return m.goToFirstPage()
 		case "G":
 			return m.goToLastPage()
+		case "ctrl+f":
+			m.viewport.LineDown(m.viewport.Height)
+			return nil
+		case "ctrl+b":
+			m.viewport.LineUp(m.viewport.Height)
+			return nil
 		case "ctrl+n":
 			return m.goToNextPage()
 		case "ctrl+p":
@@ -229,6 +402,17 @@ func (m *Model) handleKeyPress(msg tea.KeyMsg) tea.Cmd {
 
 func (m *Model) handlePageLoaded(msg PageLoadedMsg) {
 	m.viewport.SetContent(msg.Content)
+
+	// Load images for the page if image display is enabled
+	if m.showImages {
+		m.imageLoading = true
+		opts := pdf.DefaultImageExtractionOptions()
+		// Note: This will fire PageImagesLoadedMsg asynchronously
+		_ = LoadPageImagesCmd(m.document, m.currentPage, opts)
+	} else {
+		// Clear images when page changes and images are not shown
+		m.imagesOnPage = []pdf.PageImage{}
+	}
 }
 
 func (m *Model) handleNavigation(msg NavigateMsg) tea.Cmd {
@@ -288,6 +472,20 @@ func (m *Model) goToPreviousPage() tea.Cmd {
 func (m *Model) changeTheme(themeName string) {
 	m.theme = config.GetTheme(themeName)
 	m.styles = config.NewStyles(m.theme)
+
+	// Update theme index for cycling
+	for i, t := range config.AvailableThemes {
+		if t.Name == m.theme.Name {
+			m.themeIndex = i
+			break
+		}
+	}
+}
+
+func (m *Model) cycleDarkTheme() {
+	m.themeIndex = (m.themeIndex + 1) % len(config.AvailableThemes)
+	m.theme = config.AvailableThemes[m.themeIndex]
+	m.styles = config.NewStyles(m.theme)
 }
 
 // Search
@@ -304,6 +502,54 @@ func (m *Model) jumpToSearchResult() {
 		// Load page and scroll to result
 		_ = LoadPageCmd(m.document, m.currentPage)
 	}
+}
+
+// Image Loading and Rendering (Phase 3)
+
+// LoadPageImagesCmd loads images for a specific page asynchronously
+func LoadPageImagesCmd(doc *pdf.Document, pageNum int, opts pdf.ImageExtractionOptions) tea.Cmd {
+	return func() tea.Msg {
+		images, err := doc.GetPageImages(pageNum, opts)
+		if err != nil {
+			// Log error but don't fail - images are optional
+			fmt.Printf("Note: Failed to load images for page %d: %v\n", pageNum, err)
+			return PageImagesLoadedMsg{Images: []pdf.PageImage{}, PageNum: pageNum}
+		}
+		return PageImagesLoadedMsg{Images: images, PageNum: pageNum}
+	}
+}
+
+// PageImagesLoadedMsg indicates images have been loaded for a page
+type PageImagesLoadedMsg struct {
+	Images  []pdf.PageImage
+	PageNum int
+}
+
+// handlePageImagesLoaded updates model when images are loaded
+func (m *Model) handlePageImagesLoaded(msg PageImagesLoadedMsg) {
+	// Only update if images are for the current page
+	if msg.PageNum == m.currentPage {
+		m.imagesOnPage = msg.Images
+		m.imageLoading = false
+	}
+}
+
+// Copy - "y" key functionality
+
+func (m *Model) copyCurrentPage() {
+	pageNum := m.currentPage
+	pageContent := m.viewport.View()
+
+	// Store in clipboard (in-memory for now, can integrate with system clipboard)
+	m.clipboard = fmt.Sprintf("=== Page %d ===\n%s", pageNum, pageContent)
+
+	// Show feedback (briefly display copy confirmation)
+	m.showCopyFeedback = true
+}
+
+// GetClipboard returns the currently copied text
+func (m *Model) GetClipboard() string {
+	return m.clipboard
 }
 
 // Rendering
@@ -325,8 +571,56 @@ func (m *Model) renderMetadataPane(width, height int) string {
 
 func (m *Model) renderViewerPane(width, height int) string {
 	title := m.styles.PaneTitle.Render(fmt.Sprintf("📖 Viewer - Page %d", m.currentPage))
+
+	// Prepare content
+	var content string
+	if m.showImages && len(m.imagesOnPage) > 0 {
+		// Render images and text together
+		content = m.renderPageWithImages(width, height)
+	} else if m.showImages && m.imageLoading {
+		// Show loading indicator while images load
+		content = m.viewport.View() + "\n[Loading images...]"
+	} else {
+		// Just text content
+		content = m.viewport.View()
+	}
+
 	paneStyle := m.styles.PaneBorder.Width(width).Height(height)
-	return paneStyle.Render(title + "\n" + m.viewport.View())
+	return paneStyle.Render(title + "\n" + content)
+}
+
+// renderPageWithImages renders a page with both text and images
+func (m *Model) renderPageWithImages(width, height int) string {
+	var result string
+
+	// If we have images, show them at the beginning or interleaved with text
+	if len(m.imagesOnPage) > 0 {
+		renderer := NewImageRenderer(m.imageRenderCfg)
+
+		// Render each image with its metadata
+		for i, img := range m.imagesOnPage {
+			if img.Data == nil {
+				continue
+			}
+
+			// Render the image using the detected terminal format
+			imageStr := renderer.RenderImage(img.Data, img.Title)
+			result += imageStr + "\n"
+
+			// Add some spacing between images and content
+			if i < len(m.imagesOnPage)-1 {
+				result += "\n"
+			}
+		}
+
+		// Add text content after images
+		result += "\n--- Text Content ---\n" + m.viewport.View()
+	} else {
+		// No images with data, fallback to text only
+		result = m.viewport.View()
+	}
+
+	return result
 }
 
 func (m *Model) renderSearchPane(width, height int) string {
@@ -343,26 +637,39 @@ func (m *Model) renderSearchPane(width, height int) string {
 func (m *Model) renderStatusBar() string {
 	status := fmt.Sprintf("Page %d/%d", m.currentPage, m.document.GetPageCount())
 	status += " | Theme: " + m.theme.Name
+
+	if m.showCopyFeedback {
+		status += " | [✓] Copied!"
+	}
+
 	status += " | [?] Help [q] Quit"
 
 	return m.styles.StatusBar.Width(m.width).Render(status)
 }
 
 func (m *Model) renderHelp() string {
-	helpText := "LUMOS - PDF Dark Mode Reader\n\n"
-	helpText += "Navigation:\n"
-	helpText += "  j/k or ↑/↓  - Scroll\n"
-	helpText += "  d/u         - Half page\n"
-	helpText += "  gg/G        - Top/bottom\n"
-	helpText += "  Ctrl+N/P    - Next/prev page\n\n"
-	helpText += "Search:\n"
-	helpText += "  /           - Search\n"
-	helpText += "  n/N         - Next/prev match\n\n"
-	helpText += "UI:\n"
-	helpText += "  Tab         - Cycle panes\n"
-	helpText += "  1/2         - Dark/light mode\n"
-	helpText += "  ?           - Toggle help\n"
-	helpText += "  q           - Quit\n"
+	helpText := "LUMOS - Dark Mode PDF Reader for Developers\n\n"
+	helpText += "NAVIGATION\n"
+	helpText += "  j/k or ↑/↓  - Scroll line up/down\n"
+	helpText += "  d/u         - Scroll half page up/down\n"
+	helpText += "  Ctrl+F/B    - Full page down/up\n"
+	helpText += "  gg/G        - Go to first/last page\n"
+	helpText += "  Ctrl+N/P    - Next/previous page\n\n"
+	helpText += "SEARCH & COPY\n"
+	helpText += "  /           - Start search\n"
+	helpText += "  n/N         - Next/previous match\n"
+	helpText += "  y           - Copy current page\n"
+	helpText += "  Esc         - Exit search\n\n"
+	helpText += "THEMES (Professional Dark Modes)\n"
+	helpText += "  1           - Switch to dark theme\n"
+	helpText += "  2           - Switch to light theme\n"
+	helpText += "  3           - Cycle through dark themes\n"
+	helpText += "    Available: LUMOS Dark, Tokyo Night, Dracula, Solarized, Nord\n\n"
+	helpText += "UI CONTROLS\n"
+	helpText += "  Tab/Shift+Tab - Cycle panes forward/backward\n"
+	helpText += "  ?           - Toggle this help screen\n"
+	helpText += "  q/Ctrl+C    - Quit\n\n"
+	helpText += "Press ? to close this help"
 
 	return m.styles.Background.Width(m.width).Height(m.height).Render(helpText)
 }

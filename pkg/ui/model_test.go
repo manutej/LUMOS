@@ -27,8 +27,8 @@ func TestModelInit(t *testing.T) {
 		t.Errorf("Expected currentPage = 1, got %d", model.currentPage)
 	}
 
-	if model.theme.Name != "dark" {
-		t.Errorf("Expected dark theme by default, got %s", model.theme.Name)
+	if model.theme.Name != "LUMOS Dark" {
+		t.Errorf("Expected LUMOS Dark theme by default, got %s", model.theme.Name)
 	}
 
 	if model.showHelp {
@@ -97,9 +97,9 @@ func TestUpdate_ThemeChange(t *testing.T) {
 
 	model := NewModel(doc)
 
-	// Initially dark theme
-	if model.theme.Name != "dark" {
-		t.Errorf("Expected dark theme initially, got %s", model.theme.Name)
+	// Initially LUMOS Dark theme
+	if model.theme.Name != "LUMOS Dark" {
+		t.Errorf("Expected LUMOS Dark theme initially, got %s", model.theme.Name)
 	}
 
 	// Press '2' for light mode
@@ -107,17 +107,17 @@ func TestUpdate_ThemeChange(t *testing.T) {
 	_, _ = model.Update(msg)
 
 	// Should be light theme now
-	if model.theme.Name != "light" {
-		t.Errorf("Expected light theme after pressing '2', got %s", model.theme.Name)
+	if model.theme.Name != "Light" {
+		t.Errorf("Expected Light theme after pressing '2', got %s", model.theme.Name)
 	}
 
 	// Press '1' for dark mode
 	msg = tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'1'}}
 	_, _ = model.Update(msg)
 
-	// Should be dark theme again
-	if model.theme.Name != "dark" {
-		t.Errorf("Expected dark theme after pressing '1', got %s", model.theme.Name)
+	// Should be LUMOS Dark theme again
+	if model.theme.Name != "LUMOS Dark" {
+		t.Errorf("Expected LUMOS Dark theme after pressing '1', got %s", model.theme.Name)
 	}
 }
 
@@ -251,7 +251,7 @@ func TestView_Rendering(t *testing.T) {
 	}
 
 	// Help view should contain keyboard shortcuts
-	if !contains(helpView, "Navigation") {
+	if !contains(helpView, "NAVIGATION") {
 		t.Error("Help view should contain navigation instructions")
 	}
 }
@@ -290,5 +290,11 @@ func TestNavigationBounds(t *testing.T) {
 
 // Helper function
 func contains(s, substr string) bool {
-	return len(s) >= len(substr) && (s == substr || len(s) > len(substr) && (s[:len(substr)] == substr || contains(s[1:], substr)))
+	// Use simple string Contains from Go stdlib
+	for i := 0; i <= len(s)-len(substr); i++ {
+		if s[i:i+len(substr)] == substr {
+			return true
+		}
+	}
+	return false
 }

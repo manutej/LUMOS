@@ -2,7 +2,6 @@ package pdf
 
 import (
 	"fmt"
-	"sync"
 
 	"github.com/ledongthuc/pdf"
 )
@@ -10,13 +9,13 @@ import (
 // Document represents a PDF document with cached pages
 type Document struct {
 	filepath string
-	reader   *pdf.Reader
 	pages    int
 
-	// Caching
-	pageCache map[int]string
-	cacheMu   sync.RWMutex
-	maxCache  int // LRU cache size
+	// Caching - uses proper LRUCache implementation (was: unbounded simple map)
+	cache *LRUCache
+
+	// Image caching (Phase 3.1+)
+	imageCache *ImagePageCache
 
 	// Metadata
 	title      string
@@ -34,6 +33,7 @@ type PageInfo struct {
 	WordCount  int
 	HasImages  bool
 	HasTables  bool
+	Elements   []TextElement // Raw text elements with layout information
 }
 
 // NewDocument creates a new PDF document from a file path
@@ -49,11 +49,16 @@ func NewDocument(filepath string, maxCachePages int) (*Document, error) {
 		return nil, fmt.Errorf("PDF has no pages")
 	}
 
+	// Initialize LRUCache with proper max size
+	if maxCachePages <= 0 {
+		maxCachePages = 5 // Default to 5 pages
+	}
+
 	doc := &Document{
-		filepath:  filepath,
-		pages:     pages,
-		pageCache: make(map[int]string),
-		maxCache:  maxCachePages,
+		filepath:   filepath,
+		pages:      pages,
+		cache:      NewLRUCache(maxCachePages),
+		imageCache: NewImagePageCache(10), // 10-page image cache
 	}
 
 	// Extract metadata
@@ -78,18 +83,16 @@ func (d *Document) GetPage(pageNum int) (*PageInfo, error) {
 		return nil, fmt.Errorf("page number out of range: %d", pageNum)
 	}
 
-	// Check cache first
-	d.cacheMu.RLock()
-	if cached, exists := d.pageCache[pageNum]; exists {
-		d.cacheMu.RUnlock()
-		return d.createPageInfo(pageNum, cached), nil
+	// Check LRU cache first
+	if cached, exists := d.cache.Get(pageNum); exists {
+		// Return cached content without elements (they would be recalculated on demand)
+		return d.createPageInfo(pageNum, cached, nil), nil
 	}
-	d.cacheMu.RUnlock()
 
 	// Extract text from page
 	f, r, err := pdf.Open(d.filepath)
 	if err != nil {
-		return nil, fmt.Errorf("failed to reopen PDF: %w", err)
+		return nil, fmt.Errorf("failed to open PDF: %w", err)
 	}
 	defer f.Close()
 
@@ -98,19 +101,65 @@ func (d *Document) GetPage(pageNum int) (*PageInfo, error) {
 		return nil, fmt.Errorf("page %d is empty or null", pageNum)
 	}
 
-	// Extract plain text from page
-	content := ""
+	// Extract text elements with layout information
 	texts := page.Content().Text
+	elements := make([]TextElement, 0, len(texts))
+
 	for _, text := range texts {
-		content += text.S + " "
+		elements = append(elements, TextElement{
+			Text:     text.S,
+			X:        text.X,
+			Y:        text.Y,
+			FontSize: text.FontSize,
+			Font:     text.Font,
+			Width:    text.W,
+		})
 	}
 
-	// Cache the result
-	d.cacheMu.Lock()
-	d.pageCache[pageNum] = content
-	d.cacheMu.Unlock()
+	// Use LayoutAnalyzer to format text with proper line breaks
+	analyzer := NewLayoutAnalyzer()
+	content := analyzer.ExtractWithLineBreaks(elements)
 
-	return d.createPageInfo(pageNum, content), nil
+	// Store in LRU cache (will evict old pages if full)
+	d.cache.Put(pageNum, content)
+
+	return d.createPageInfo(pageNum, content, elements), nil
+}
+
+// GetRawElements extracts raw text elements with layout information from a page
+// without formatting or line breaking. Useful for layout analysis.
+func (d *Document) GetRawElements(pageNum int) ([]TextElement, error) {
+	if pageNum < 1 || pageNum > d.pages {
+		return nil, fmt.Errorf("page number out of range: %d", pageNum)
+	}
+
+	// Extract raw text elements from page
+	f, r, err := pdf.Open(d.filepath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to open PDF: %w", err)
+	}
+	defer f.Close()
+
+	page := r.Page(pageNum)
+	if page.V.IsNull() {
+		return nil, fmt.Errorf("page %d is empty or null", pageNum)
+	}
+
+	texts := page.Content().Text
+	elements := make([]TextElement, 0, len(texts))
+
+	for _, text := range texts {
+		elements = append(elements, TextElement{
+			Text:     text.S,
+			X:        text.X,
+			Y:        text.Y,
+			FontSize: text.FontSize,
+			Font:     text.Font,
+			Width:    text.W,
+		})
+	}
+
+	return elements, nil
 }
 
 // GetPageRange retrieves text from a range of pages
@@ -133,27 +182,36 @@ func (d *Document) GetPageRange(startPage, endPage int) (string, error) {
 
 // Search finds all occurrences of a search term
 func (d *Document) Search(query string) ([]SearchResult, error) {
+	// Empty query returns no results (not an error)
+	if query == "" {
+		return []SearchResult{}, nil
+	}
+
 	var results []SearchResult
 
 	for pageNum := 1; pageNum <= d.pages; pageNum++ {
 		page, err := d.GetPage(pageNum)
 		if err != nil {
+			// Log error but continue searching remaining pages
+			// This allows partial results even if some pages fail
 			continue
 		}
 
 		matches := findMatches(page.Text, query)
 		for _, match := range matches {
 			results = append(results, SearchResult{
-				PageNum:      pageNum,
-				LineNum:      match.LineNum,
-				ColumnNum:    match.ColumnNum,
-				MatchText:    match.Text,
-				ContextBefore: match.ContextBefore,
-				ContextAfter:  match.ContextAfter,
+				PageNum:        pageNum,
+				LineNum:        match.LineNum,
+				ColumnNum:      match.ColumnNum,
+				MatchText:      match.Text,
+				ContextBefore:  match.ContextBefore,
+				ContextAfter:   match.ContextAfter,
 			})
 		}
 	}
 
+	// Return results even if some pages failed
+	// This is better than failing completely
 	return results, nil
 }
 
@@ -171,25 +229,17 @@ func (d *Document) GetMetadata() Metadata {
 
 // ClearCache clears all cached pages
 func (d *Document) ClearCache() {
-	d.cacheMu.Lock()
-	defer d.cacheMu.Unlock()
-	d.pageCache = make(map[int]string)
+	d.cache.Clear()
 }
 
 // CacheStats returns cache statistics
 func (d *Document) CacheStats() CacheStats {
-	d.cacheMu.RLock()
-	defer d.cacheMu.RUnlock()
-
-	return CacheStats{
-		CachedPages: len(d.pageCache),
-		MaxSize:     d.maxCache,
-	}
+	return d.cache.Stats()
 }
 
 // Helper functions
 
-func (d *Document) createPageInfo(pageNum int, text string) *PageInfo {
+func (d *Document) createPageInfo(pageNum int, text string, elements []TextElement) *PageInfo {
 	lineCount := countLines(text)
 	wordCount := countWords(text)
 
@@ -198,6 +248,7 @@ func (d *Document) createPageInfo(pageNum int, text string) *PageInfo {
 		Text:      text,
 		LineCount: lineCount,
 		WordCount: wordCount,
+		Elements:  elements,
 		// TODO: Detect images and tables
 		HasImages: false,
 		HasTables: false,
