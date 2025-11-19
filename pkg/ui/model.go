@@ -243,8 +243,15 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case ToggleImagesMsg:
 		// Toggle image display on/off
 		m.showImages = !m.showImages
-		// TODO: Phase 3.5 - Load images when showImages becomes true
-		// For now, just toggle the flag. Rendering will be added in Phase 3.5
+		// Load images when toggled on
+		if m.showImages {
+			m.imageLoading = true
+			opts := pdf.DefaultImageExtractionOptions()
+			cmd = LoadPageImagesCmd(m.document, m.currentPage, opts)
+		}
+
+	case PageImagesLoadedMsg:
+		m.handlePageImagesLoaded(msg)
 	}
 
 	return m, cmd
@@ -395,6 +402,17 @@ func (m *Model) handleKeyPress(msg tea.KeyMsg) tea.Cmd {
 
 func (m *Model) handlePageLoaded(msg PageLoadedMsg) {
 	m.viewport.SetContent(msg.Content)
+
+	// Load images for the page if image display is enabled
+	if m.showImages {
+		m.imageLoading = true
+		opts := pdf.DefaultImageExtractionOptions()
+		// Note: This will fire PageImagesLoadedMsg asynchronously
+		_ = LoadPageImagesCmd(m.document, m.currentPage, opts)
+	} else {
+		// Clear images when page changes and images are not shown
+		m.imagesOnPage = []pdf.PageImage{}
+	}
 }
 
 func (m *Model) handleNavigation(msg NavigateMsg) tea.Cmd {
@@ -486,6 +504,36 @@ func (m *Model) jumpToSearchResult() {
 	}
 }
 
+// Image Loading and Rendering (Phase 3)
+
+// LoadPageImagesCmd loads images for a specific page asynchronously
+func LoadPageImagesCmd(doc *pdf.Document, pageNum int, opts pdf.ImageExtractionOptions) tea.Cmd {
+	return func() tea.Msg {
+		images, err := doc.GetPageImages(pageNum, opts)
+		if err != nil {
+			// Log error but don't fail - images are optional
+			fmt.Printf("Note: Failed to load images for page %d: %v\n", pageNum, err)
+			return PageImagesLoadedMsg{Images: []pdf.PageImage{}, PageNum: pageNum}
+		}
+		return PageImagesLoadedMsg{Images: images, PageNum: pageNum}
+	}
+}
+
+// PageImagesLoadedMsg indicates images have been loaded for a page
+type PageImagesLoadedMsg struct {
+	Images  []pdf.PageImage
+	PageNum int
+}
+
+// handlePageImagesLoaded updates model when images are loaded
+func (m *Model) handlePageImagesLoaded(msg PageImagesLoadedMsg) {
+	// Only update if images are for the current page
+	if msg.PageNum == m.currentPage {
+		m.imagesOnPage = msg.Images
+		m.imageLoading = false
+	}
+}
+
 // Copy - "y" key functionality
 
 func (m *Model) copyCurrentPage() {
@@ -523,8 +571,56 @@ func (m *Model) renderMetadataPane(width, height int) string {
 
 func (m *Model) renderViewerPane(width, height int) string {
 	title := m.styles.PaneTitle.Render(fmt.Sprintf("📖 Viewer - Page %d", m.currentPage))
+
+	// Prepare content
+	var content string
+	if m.showImages && len(m.imagesOnPage) > 0 {
+		// Render images and text together
+		content = m.renderPageWithImages(width, height)
+	} else if m.showImages && m.imageLoading {
+		// Show loading indicator while images load
+		content = m.viewport.View() + "\n[Loading images...]"
+	} else {
+		// Just text content
+		content = m.viewport.View()
+	}
+
 	paneStyle := m.styles.PaneBorder.Width(width).Height(height)
-	return paneStyle.Render(title + "\n" + m.viewport.View())
+	return paneStyle.Render(title + "\n" + content)
+}
+
+// renderPageWithImages renders a page with both text and images
+func (m *Model) renderPageWithImages(width, height int) string {
+	var result string
+
+	// If we have images, show them at the beginning or interleaved with text
+	if len(m.imagesOnPage) > 0 {
+		renderer := NewImageRenderer(m.imageRenderCfg)
+
+		// Render each image with its metadata
+		for i, img := range m.imagesOnPage {
+			if img.Data == nil {
+				continue
+			}
+
+			// Render the image using the detected terminal format
+			imageStr := renderer.RenderImage(img.Data, img.Title)
+			result += imageStr + "\n"
+
+			// Add some spacing between images and content
+			if i < len(m.imagesOnPage)-1 {
+				result += "\n"
+			}
+		}
+
+		// Add text content after images
+		result += "\n--- Text Content ---\n" + m.viewport.View()
+	} else {
+		// No images with data, fallback to text only
+		result = m.viewport.View()
+	}
+
+	return result
 }
 
 func (m *Model) renderSearchPane(width, height int) string {
